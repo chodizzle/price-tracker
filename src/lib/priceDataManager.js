@@ -110,55 +110,143 @@ class PriceDataManager {
       throw error; // Propagate error to handle it in calling code
     }
   }
+/**
+ * Date alignment utility functions to be added to priceDataManager.js
+ */
 
-  addPriceData(commodity, newPrices) {
-    console.log(`Adding ${newPrices.length} new prices for ${commodity}`);
-    
-    if (!this.data[commodity]) {
-      console.log(`Initializing ${commodity} section`);
-      this.data[commodity] = {
-        metadata: {
-          lastUpdated: new Date().toISOString(),
-          dataSource: commodity === 'eggs' ? 
-            { 2024: 'static-file', 2025: 'usda-api' } : 
-            { 2025: 'usda-api' }
-        },
-        prices: []
+/**
+ * Determines if a date string is a Friday
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {boolean} True if the date is a Friday
+ */
+function isFriday(dateStr) {
+  const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
+  return date.getUTCDay() === 5; // 5 = Friday in UTC
+}
+
+/**
+ * Gets the nearest Friday for a date, preferring the current Friday if it is one,
+ * otherwise using the previous Friday. Never crosses year boundaries.
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {string} Nearest Friday in YYYY-MM-DD format
+ */
+function getNearestFriday(dateStr) {
+  // Special case for 2024 Avg
+  if (dateStr === '2024 Avg') return dateStr;
+  
+  // Parse the date, using noon UTC to avoid timezone issues
+  const date = new Date(dateStr + 'T12:00:00Z');
+  const originalYear = date.getUTCFullYear();
+  
+  // If already a Friday, return as is
+  if (date.getUTCDay() === 5) {
+    return dateStr;
+  }
+  
+  // Calculate days to go back to previous Friday
+  let daysToSubtract = date.getUTCDay();
+  if (daysToSubtract < 5) {
+    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
+    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
+  } else {
+    // For day 6 (Saturday), go back 1 day
+    daysToSubtract = 1;
+  }
+  
+  // Create a new date by subtracting days
+  const adjustedDate = new Date(date);
+  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
+  
+  // Check if we've crossed a year boundary
+  if (adjustedDate.getUTCFullYear() !== originalYear) {
+    // If crossing year boundary, use the original date
+    return dateStr;
+  }
+  
+  // Format as YYYY-MM-DD
+  return adjustedDate.toISOString().split('T')[0];
+}
+
+/**
+ * Adds adjusted date field to price data
+ * @param {Array} prices - Array of price objects
+ * @returns {Array} Updated price objects with adj_date field
+ */
+function addAdjustedDates(prices) {
+  return prices.map(price => {
+    // For special cases like "2024 Avg", keep as is
+    if (price.date === '2024 Avg') {
+      return {
+        ...price,
+        adj_date: price.date
       };
     }
+    
+    // For regular dates, calculate the nearest Friday
+    return {
+      ...price,
+      adj_date: getNearestFriday(price.date)
+    };
+  });
+}
+  // Update to the addPriceData method in priceDataManager.js
+
+addPriceData(commodity, newPrices) {
+  console.log(`Adding ${newPrices.length} new prices for ${commodity}`);
   
-    const existingPrices = this.data[commodity].prices;
-    console.log('Current number of existing prices:', existingPrices.length);
-    
-    const existingDates = new Set(existingPrices.map(p => p.date));
-    
-    // Filter out prices we already have
-    const pricesToAdd = newPrices.filter(p => {
+  if (!this.data[commodity]) {
+    console.log(`Initializing ${commodity} section`);
+    this.data[commodity] = {
+      metadata: {
+        lastUpdated: new Date().toISOString(),
+        dataSource: commodity === 'eggs' ? 
+          { 2024: 'static-file', 2025: 'usda-api' } : 
+          { 2025: 'usda-api' }
+      },
+      prices: []
+    };
+  }
+
+  const existingPrices = this.data[commodity].prices;
+  console.log('Current number of existing prices:', existingPrices.length);
+  
+  const existingDates = new Set(existingPrices.map(p => p.date));
+  
+  // Add adjusted dates to new prices
+  const pricesToAdd = newPrices
+    .filter(p => {
       const isDuplicate = existingDates.has(p.date);
       console.log(`Price for ${p.date}: ${isDuplicate ? 'DUPLICATE' : 'NEW'}`);
       return !isDuplicate;
+    })
+    .map(p => {
+      // Add adjusted date field
+      return {
+        ...p,
+        adj_date: getNearestFriday(p.date)
+      };
     });
-    
-    if (pricesToAdd.length > 0) {
-      console.log(`Adding ${pricesToAdd.length} new price points for ${commodity}`);
-      
-      // Add new prices and sort by date
-      this.data[commodity].prices = [...existingPrices, ...pricesToAdd]
-        .sort((a, b) => new Date(a.date) - new Date(b.date));
-      
-      // Update metadata
-      this.data[commodity].metadata.lastUpdated = new Date().toISOString();
-      
-      // Save the updated data
-      this.saveData();
-      
-      console.log(`Updated ${commodity} prices. Total prices:`, this.data[commodity].prices.length);
-    } else {
-      console.log(`No new prices to add for ${commodity}`);
-    }
   
-    return pricesToAdd;
+  if (pricesToAdd.length > 0) {
+    console.log(`Adding ${pricesToAdd.length} new price points for ${commodity}`);
+    
+    // Add new prices and sort by date
+    this.data[commodity].prices = [...existingPrices, ...pricesToAdd]
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Update metadata
+    this.data[commodity].metadata.lastUpdated = new Date().toISOString();
+    
+    // Save the updated data
+    this.saveData();
+    
+    console.log(`Updated ${commodity} prices. Total prices:`, this.data[commodity].prices.length);
+  } else {
+    console.log(`No new prices to add for ${commodity}`);
   }
+
+  return pricesToAdd;
+}
 
   static parseAPIData(jsonFilePath) {
     try {
@@ -302,7 +390,12 @@ async function updatePrices(commodity, jsonFilePath) {
     }
   }
 
+
+
+// Export for use in priceDataManager or other modules
 module.exports = {
+  isFriday,
+  getNearestFriday,
   priceDataManager,
   updatePrices
 };
