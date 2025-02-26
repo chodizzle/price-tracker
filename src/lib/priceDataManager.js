@@ -7,12 +7,116 @@ const PRICES_FILE = path.join(DATA_DIR, 'prices.json');
 const BACKUP_DIR = path.join(DATA_DIR, 'backups');
 const CACHE_FILE = path.join(DATA_DIR, 'cache.json');
 
+/**
+ * Determines if a date string is a Friday
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {boolean} True if the date is a Friday
+ */
+function isFriday(dateStr) {
+  const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
+  return date.getUTCDay() === 5; // 5 = Friday in UTC
+}
+
+/**
+ * Gets the nearest Friday for a date, preferring the current Friday if it is one,
+ * otherwise using the previous Friday. Never crosses year boundaries.
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {string} Nearest Friday in YYYY-MM-DD format
+ */
+function getNearestFriday(dateStr) {
+  // Special case for 2024 Avg
+  if (dateStr === '2024 Avg') return dateStr;
+  
+  // Parse the date, using noon UTC to avoid timezone issues
+  const date = new Date(dateStr + 'T12:00:00Z');
+  const originalYear = date.getUTCFullYear();
+  
+  // If already a Friday, return as is
+  if (date.getUTCDay() === 5) {
+    return dateStr;
+  }
+  
+  // Calculate days to go back to previous Friday
+  let daysToSubtract = date.getUTCDay();
+  if (daysToSubtract < 5) {
+    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
+    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
+  } else {
+    // For day 6 (Saturday), go back 1 day
+    daysToSubtract = 1;
+  }
+  
+  // Create a new date by subtracting days
+  const adjustedDate = new Date(date);
+  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
+  
+  // Check if we've crossed a year boundary
+  if (adjustedDate.getUTCFullYear() !== originalYear) {
+    // If crossing year boundary, use the original date
+    return dateStr;
+  }
+  
+  // Format as YYYY-MM-DD
+  return adjustedDate.toISOString().split('T')[0];
+}
+
+/**
+ * Adds adjusted date field to price data
+ * @param {Array} prices - Array of price objects
+ * @returns {Array} Updated price objects with adj_date field
+ */
+function addAdjustedDates(prices) {
+  return prices.map(price => {
+    // Skip if already has adj_date
+    if (price.adj_date) return price;
+    
+    // For special cases like "2024 Avg", keep as is
+    if (price.date === '2024 Avg') {
+      return {
+        ...price,
+        adj_date: price.date
+      };
+    }
+    
+    // For regular dates, calculate the nearest Friday
+    return {
+      ...price,
+      adj_date: getNearestFriday(price.date)
+    };
+  });
+}
+
 class PriceDataManager {
   constructor() {
     this.ensureDirectories();
     this.cache = this.loadCache();
     this.data = this.loadData();
     this.initializeDataStructure();
+    
+    // Add adjusted dates to existing data
+    this.addAdjustedDatesToExistingData();
+  }
+
+  // Add adjusted dates to all existing price data
+  addAdjustedDatesToExistingData() {
+    let dataChanged = false;
+    
+    for (const commodity of Object.keys(this.data)) {
+      if (!this.data[commodity]?.prices) continue;
+      
+      const updatedPrices = addAdjustedDates(this.data[commodity].prices);
+      
+      if (JSON.stringify(updatedPrices) !== JSON.stringify(this.data[commodity].prices)) {
+        this.data[commodity].prices = updatedPrices;
+        dataChanged = true;
+      }
+    }
+    
+    // Save if data was updated
+    if (dataChanged) {
+      this.saveData();
+      console.log('Added adjusted dates to existing price data');
+    }
   }
 
   // Ensure proper data structure
@@ -110,143 +214,64 @@ class PriceDataManager {
       throw error; // Propagate error to handle it in calling code
     }
   }
-/**
- * Date alignment utility functions to be added to priceDataManager.js
- */
 
-/**
- * Determines if a date string is a Friday
- * @param {string} dateStr - Date in YYYY-MM-DD format
- * @returns {boolean} True if the date is a Friday
- */
-function isFriday(dateStr) {
-  const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
-  return date.getUTCDay() === 5; // 5 = Friday in UTC
-}
-
-/**
- * Gets the nearest Friday for a date, preferring the current Friday if it is one,
- * otherwise using the previous Friday. Never crosses year boundaries.
- * @param {string} dateStr - Date in YYYY-MM-DD format
- * @returns {string} Nearest Friday in YYYY-MM-DD format
- */
-function getNearestFriday(dateStr) {
-  // Special case for 2024 Avg
-  if (dateStr === '2024 Avg') return dateStr;
-  
-  // Parse the date, using noon UTC to avoid timezone issues
-  const date = new Date(dateStr + 'T12:00:00Z');
-  const originalYear = date.getUTCFullYear();
-  
-  // If already a Friday, return as is
-  if (date.getUTCDay() === 5) {
-    return dateStr;
-  }
-  
-  // Calculate days to go back to previous Friday
-  let daysToSubtract = date.getUTCDay();
-  if (daysToSubtract < 5) {
-    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
-    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
-  } else {
-    // For day 6 (Saturday), go back 1 day
-    daysToSubtract = 1;
-  }
-  
-  // Create a new date by subtracting days
-  const adjustedDate = new Date(date);
-  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
-  
-  // Check if we've crossed a year boundary
-  if (adjustedDate.getUTCFullYear() !== originalYear) {
-    // If crossing year boundary, use the original date
-    return dateStr;
-  }
-  
-  // Format as YYYY-MM-DD
-  return adjustedDate.toISOString().split('T')[0];
-}
-
-/**
- * Adds adjusted date field to price data
- * @param {Array} prices - Array of price objects
- * @returns {Array} Updated price objects with adj_date field
- */
-function addAdjustedDates(prices) {
-  return prices.map(price => {
-    // For special cases like "2024 Avg", keep as is
-    if (price.date === '2024 Avg') {
-      return {
-        ...price,
-        adj_date: price.date
+  // Updated addPriceData method with date alignment
+  addPriceData(commodity, newPrices) {
+    console.log(`Adding ${newPrices.length} new prices for ${commodity}`);
+    
+    if (!this.data[commodity]) {
+      console.log(`Initializing ${commodity} section`);
+      this.data[commodity] = {
+        metadata: {
+          lastUpdated: new Date().toISOString(),
+          dataSource: commodity === 'eggs' ? 
+            { 2024: 'static-file', 2025: 'usda-api' } : 
+            { 2025: 'usda-api' }
+        },
+        prices: []
       };
     }
-    
-    // For regular dates, calculate the nearest Friday
-    return {
-      ...price,
-      adj_date: getNearestFriday(price.date)
-    };
-  });
-}
-  // Update to the addPriceData method in priceDataManager.js
 
-addPriceData(commodity, newPrices) {
-  console.log(`Adding ${newPrices.length} new prices for ${commodity}`);
-  
-  if (!this.data[commodity]) {
-    console.log(`Initializing ${commodity} section`);
-    this.data[commodity] = {
-      metadata: {
-        lastUpdated: new Date().toISOString(),
-        dataSource: commodity === 'eggs' ? 
-          { 2024: 'static-file', 2025: 'usda-api' } : 
-          { 2025: 'usda-api' }
-      },
-      prices: []
-    };
+    const existingPrices = this.data[commodity].prices;
+    console.log('Current number of existing prices:', existingPrices.length);
+    
+    const existingDates = new Set(existingPrices.map(p => p.date));
+    
+    // Add adjusted dates to new prices
+    const pricesToAdd = newPrices
+      .filter(p => {
+        const isDuplicate = existingDates.has(p.date);
+        console.log(`Price for ${p.date}: ${isDuplicate ? 'DUPLICATE' : 'NEW'}`);
+        return !isDuplicate;
+      })
+      .map(p => {
+        // Add adjusted date field
+        return {
+          ...p,
+          adj_date: getNearestFriday(p.date)
+        };
+      });
+    
+    if (pricesToAdd.length > 0) {
+      console.log(`Adding ${pricesToAdd.length} new price points for ${commodity}`);
+      
+      // Add new prices and sort by date
+      this.data[commodity].prices = [...existingPrices, ...pricesToAdd]
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Update metadata
+      this.data[commodity].metadata.lastUpdated = new Date().toISOString();
+      
+      // Save the updated data
+      this.saveData();
+      
+      console.log(`Updated ${commodity} prices. Total prices:`, this.data[commodity].prices.length);
+    } else {
+      console.log(`No new prices to add for ${commodity}`);
+    }
+
+    return pricesToAdd;
   }
-
-  const existingPrices = this.data[commodity].prices;
-  console.log('Current number of existing prices:', existingPrices.length);
-  
-  const existingDates = new Set(existingPrices.map(p => p.date));
-  
-  // Add adjusted dates to new prices
-  const pricesToAdd = newPrices
-    .filter(p => {
-      const isDuplicate = existingDates.has(p.date);
-      console.log(`Price for ${p.date}: ${isDuplicate ? 'DUPLICATE' : 'NEW'}`);
-      return !isDuplicate;
-    })
-    .map(p => {
-      // Add adjusted date field
-      return {
-        ...p,
-        adj_date: getNearestFriday(p.date)
-      };
-    });
-  
-  if (pricesToAdd.length > 0) {
-    console.log(`Adding ${pricesToAdd.length} new price points for ${commodity}`);
-    
-    // Add new prices and sort by date
-    this.data[commodity].prices = [...existingPrices, ...pricesToAdd]
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    // Update metadata
-    this.data[commodity].metadata.lastUpdated = new Date().toISOString();
-    
-    // Save the updated data
-    this.saveData();
-    
-    console.log(`Updated ${commodity} prices. Total prices:`, this.data[commodity].prices.length);
-  } else {
-    console.log(`No new prices to add for ${commodity}`);
-  }
-
-  return pricesToAdd;
-}
 
   static parseAPIData(jsonFilePath) {
     try {
@@ -328,74 +353,73 @@ addPriceData(commodity, newPrices) {
 const priceDataManager = new PriceDataManager();
 
 async function updatePrices(commodity, jsonFilePath) {
-    try {
-      console.log('=== START updatePrices ===');
-      console.log('Commodity:', commodity);
-      console.log('JSON File Path:', jsonFilePath);
-  
-      // Handle both relative and absolute paths
-      const fullPath = path.isAbsolute(jsonFilePath) 
-        ? jsonFilePath 
-        : path.join(process.cwd(), 'data', 'raw', jsonFilePath);
-      
-      console.log('Full resolved path:', fullPath);
-      
-      // Verify file exists with Node.js fs
-      const fs = require('fs');
-      if (!fs.existsSync(fullPath)) {
-        console.error(`❌ File NOT FOUND: ${fullPath}`);
-        throw new Error(`File not found: ${fullPath}`);
-      }
-  
-      // Read file with error handling
-      let rawData;
-      try {
-        rawData = fs.readFileSync(fullPath, 'utf8');
-      } catch (readError) {
-        console.error('❌ Error reading file:', readError);
-        throw readError;
-      }
-  
-      // Parse JSON with error handling
-      let parsedData;
-      try {
-        parsedData = JSON.parse(rawData);
-      } catch (parseError) {
-        console.error('❌ Error parsing JSON:', parseError);
-        throw parseError;
-      }
-  
-      console.log('Total raw records:', parsedData.results.length);
-      
-      // Detailed first record logging
-      console.log('First raw record:', JSON.stringify(parsedData.results[0], null, 2));
-      
-      // Parse API data
-      const newPrices = PriceDataManager.parseAPIData(fullPath);
-      console.log(`Parsed ${newPrices.length} prices from file`);
-      
-      // Log sample parsed prices
-      console.log('Sample parsed prices:', JSON.stringify(newPrices.slice(0, 2), null, 2));
-      
-      // Add prices
-      const addedPrices = priceDataManager.addPriceData(commodity, newPrices);
-      console.log(`Added ${addedPrices.length} new ${commodity} price points`);
-      
-      console.log('=== END updatePrices ===');
-      return addedPrices;
-    } catch (error) {
-      console.error('❌ FATAL ERROR in updatePrices:', error);
-      console.error('Error stack:', error.stack);
-      throw error;
+  try {
+    console.log('=== START updatePrices ===');
+    console.log('Commodity:', commodity);
+    console.log('JSON File Path:', jsonFilePath);
+
+    // Handle both relative and absolute paths
+    const fullPath = path.isAbsolute(jsonFilePath) 
+      ? jsonFilePath 
+      : path.join(process.cwd(), 'data', 'raw', jsonFilePath);
+    
+    console.log('Full resolved path:', fullPath);
+    
+    // Verify file exists with Node.js fs
+    const fs = require('fs');
+    if (!fs.existsSync(fullPath)) {
+      console.error(`❌ File NOT FOUND: ${fullPath}`);
+      throw new Error(`File not found: ${fullPath}`);
     }
+
+    // Read file with error handling
+    let rawData;
+    try {
+      rawData = fs.readFileSync(fullPath, 'utf8');
+    } catch (readError) {
+      console.error('❌ Error reading file:', readError);
+      throw readError;
+    }
+
+    // Parse JSON with error handling
+    let parsedData;
+    try {
+      parsedData = JSON.parse(rawData);
+    } catch (parseError) {
+      console.error('❌ Error parsing JSON:', parseError);
+      throw parseError;
+    }
+
+    console.log('Total raw records:', parsedData.results.length);
+    
+    // Detailed first record logging
+    console.log('First raw record:', JSON.stringify(parsedData.results[0], null, 2));
+    
+    // Parse API data
+    const newPrices = PriceDataManager.parseAPIData(fullPath);
+    console.log(`Parsed ${newPrices.length} prices from file`);
+    
+    // Log sample parsed prices
+    console.log('Sample parsed prices:', JSON.stringify(newPrices.slice(0, 2), null, 2));
+    
+    // Add prices
+    const addedPrices = priceDataManager.addPriceData(commodity, newPrices);
+    console.log(`Added ${addedPrices.length} new ${commodity} price points`);
+    
+    console.log('=== END updatePrices ===');
+    return addedPrices;
+  } catch (error) {
+    console.error('❌ FATAL ERROR in updatePrices:', error);
+    console.error('Error stack:', error.stack);
+    throw error;
   }
+}
 
-
-
-// Export for use in priceDataManager or other modules
+// Export the utility functions and manager
 module.exports = {
   isFriday,
   getNearestFriday,
+  addAdjustedDates,
   priceDataManager,
   updatePrices
 };

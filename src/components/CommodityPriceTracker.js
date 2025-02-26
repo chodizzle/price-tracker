@@ -40,14 +40,6 @@ const PriceTooltip = ({ active, payload, label }) => {
 };
 
 /**
- * Helper function that keeps the original date (no alignment)
- * We'll implement proper alignment later if needed
- */
-function keepOriginalDate(dateStr) {
-  return dateStr;
-}
-
-/**
  * Process data for each commodity with aligned dates
  */
 function processData(commoditiesData) {
@@ -83,8 +75,8 @@ function processData(commoditiesData) {
       // Only include 2025 data
       if (!point.date.startsWith('2025')) return;
       
-      // Use original date (no alignment for now)
-      const alignedDate = keepOriginalDate(point.date);
+      // Use adjusted date if available, otherwise original date
+      const alignedDate = point.adj_date || point.date;
       
       alignedData.push({
         date: point.date,
@@ -340,7 +332,8 @@ export default function CommodityPriceTracker() {
           )}
           
           <div className="mt-6 text-center text-xs text-gray-500">
-            <p>"2024 Avg" represents the annual average price for 2024.</p>
+            <p>&quot;2024 Avg&quot; represents the annual average price for 2024.</p>
+            <p className="mt-1">Prices are aligned to Fridays for consistent comparison.</p>
           </div>
         </CardContent>
       </Card>
