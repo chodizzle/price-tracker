@@ -19,365 +19,425 @@
         "date": "2024-01-05",
         "price": 2.2968,
         "minPrice": 2.18196,
-        "maxPrice": 2.4116400000000002
+        "maxPrice": 2.4116400000000002,
+        "adj_date": "2024-01-05"
       },
       {
         "date": "2024-01-12",
         "price": 2.1968,
         "minPrice": 2.08696,
-        "maxPrice": 2.3066400000000002
+        "maxPrice": 2.3066400000000002,
+        "adj_date": "2024-01-12"
       },
       {
         "date": "2024-01-19",
         "price": 1.9168,
         "minPrice": 1.82096,
-        "maxPrice": 2.01264
+        "maxPrice": 2.01264,
+        "adj_date": "2024-01-19"
       },
       {
         "date": "2024-01-26",
         "price": 1.9768999999999999,
         "minPrice": 1.8780549999999998,
-        "maxPrice": 2.075745
+        "maxPrice": 2.075745,
+        "adj_date": "2024-01-26"
       },
       {
         "date": "2024-02-02",
         "price": 2.4369,
         "minPrice": 2.315055,
-        "maxPrice": 2.558745
+        "maxPrice": 2.558745,
+        "adj_date": "2024-02-02"
       },
       {
         "date": "2024-02-09",
         "price": 3.0069,
         "minPrice": 2.8565549999999997,
-        "maxPrice": 3.157245
+        "maxPrice": 3.157245,
+        "adj_date": "2024-02-09"
       },
       {
         "date": "2024-02-16",
         "price": 3.2868,
         "minPrice": 3.12246,
-        "maxPrice": 3.45114
+        "maxPrice": 3.45114,
+        "adj_date": "2024-02-16"
       },
       {
         "date": "2024-02-23",
         "price": 3.2868,
         "minPrice": 3.12246,
-        "maxPrice": 3.45114
+        "maxPrice": 3.45114,
+        "adj_date": "2024-02-23"
       },
       {
         "date": "2024-03-01",
         "price": 3.137,
         "minPrice": 2.98015,
-        "maxPrice": 3.29385
+        "maxPrice": 3.29385,
+        "adj_date": "2024-03-01"
       },
       {
         "date": "2024-03-08",
         "price": 2.3369,
         "minPrice": 2.220055,
-        "maxPrice": 2.453745
+        "maxPrice": 2.453745,
+        "adj_date": "2024-03-08"
       },
       {
         "date": "2024-03-15",
         "price": 2.2269,
         "minPrice": 2.115555,
-        "maxPrice": 2.338245
+        "maxPrice": 2.338245,
+        "adj_date": "2024-03-15"
       },
       {
         "date": "2024-03-22",
         "price": 2.2469,
         "minPrice": 2.134555,
-        "maxPrice": 2.359245
+        "maxPrice": 2.359245,
+        "adj_date": "2024-03-22"
       },
       {
         "date": "2024-03-29",
         "price": 2.4768,
         "minPrice": 2.35296,
-        "maxPrice": 2.60064
+        "maxPrice": 2.60064,
+        "adj_date": "2024-03-29"
       },
       {
         "date": "2024-04-05",
         "price": 2.4969,
         "minPrice": 2.372055,
-        "maxPrice": 2.621745
+        "maxPrice": 2.621745,
+        "adj_date": "2024-04-05"
       },
       {
         "date": "2024-04-12",
         "price": 2.4969,
         "minPrice": 2.372055,
-        "maxPrice": 2.621745
+        "maxPrice": 2.621745,
+        "adj_date": "2024-04-12"
       },
       {
         "date": "2024-04-19",
         "price": 2.4969,
         "minPrice": 2.372055,
-        "maxPrice": 2.621745
+        "maxPrice": 2.621745,
+        "adj_date": "2024-04-19"
       },
       {
         "date": "2024-04-26",
         "price": 2.4969,
         "minPrice": 2.372055,
-        "maxPrice": 2.621745
+        "maxPrice": 2.621745,
+        "adj_date": "2024-04-26"
       },
       {
         "date": "2024-05-03",
         "price": 2.1068000000000002,
         "minPrice": 2.0014600000000002,
-        "maxPrice": 2.21214
+        "maxPrice": 2.21214,
+        "adj_date": "2024-05-03"
       },
       {
         "date": "2024-05-10",
         "price": 1.6469,
         "minPrice": 1.564555,
-        "maxPrice": 1.7292450000000001
+        "maxPrice": 1.7292450000000001,
+        "adj_date": "2024-05-10"
       },
       {
         "date": "2024-05-17",
         "price": 1.5569,
         "minPrice": 1.4790549999999998,
-        "maxPrice": 1.6347450000000001
+        "maxPrice": 1.6347450000000001,
+        "adj_date": "2024-05-17"
       },
       {
         "date": "2024-05-24",
         "price": 1.5968,
         "minPrice": 1.5169599999999999,
-        "maxPrice": 1.6766400000000001
+        "maxPrice": 1.6766400000000001,
+        "adj_date": "2024-05-24"
       },
       {
         "date": "2024-05-31",
         "price": 1.9868999999999999,
         "minPrice": 1.8875549999999999,
-        "maxPrice": 2.086245
+        "maxPrice": 2.086245,
+        "adj_date": "2024-05-31"
       },
       {
         "date": "2024-06-07",
         "price": 2.3668,
         "minPrice": 2.24846,
-        "maxPrice": 2.48514
+        "maxPrice": 2.48514,
+        "adj_date": "2024-06-07"
       },
       {
         "date": "2024-06-14",
         "price": 2.5569,
         "minPrice": 2.429055,
-        "maxPrice": 2.6847450000000004
+        "maxPrice": 2.6847450000000004,
+        "adj_date": "2024-06-14"
       },
       {
         "date": "2024-06-21",
         "price": 2.5968999999999998,
         "minPrice": 2.4670549999999998,
-        "maxPrice": 2.7267449999999998
+        "maxPrice": 2.7267449999999998,
+        "adj_date": "2024-06-21"
       },
       {
         "date": "2024-06-28",
         "price": 2.5769,
         "minPrice": 2.448055,
-        "maxPrice": 2.7057450000000003
+        "maxPrice": 2.7057450000000003,
+        "adj_date": "2024-06-28"
       },
       {
         "date": "2024-07-05",
         "price": 2.4568,
         "minPrice": 2.33396,
-        "maxPrice": 2.57964
+        "maxPrice": 2.57964,
+        "adj_date": "2024-07-05"
       },
       {
         "date": "2024-07-12",
         "price": 2.3575,
         "minPrice": 2.2396249999999998,
-        "maxPrice": 2.475375
+        "maxPrice": 2.475375,
+        "adj_date": "2024-07-12"
       },
       {
         "date": "2024-07-19",
         "price": 2.3468999999999998,
         "minPrice": 2.2295549999999995,
-        "maxPrice": 2.464245
+        "maxPrice": 2.464245,
+        "adj_date": "2024-07-19"
       },
       {
         "date": "2024-07-26",
         "price": 2.4369,
         "minPrice": 2.315055,
-        "maxPrice": 2.558745
+        "maxPrice": 2.558745,
+        "adj_date": "2024-07-26"
       },
       {
         "date": "2024-08-02",
         "price": 2.7569,
         "minPrice": 2.619055,
-        "maxPrice": 2.894745
+        "maxPrice": 2.894745,
+        "adj_date": "2024-08-02"
       },
       {
         "date": "2024-08-09",
         "price": 3.1769,
         "minPrice": 3.0180549999999995,
-        "maxPrice": 3.335745
+        "maxPrice": 3.335745,
+        "adj_date": "2024-08-09"
       },
       {
         "date": "2024-08-16",
         "price": 3.6568,
         "minPrice": 3.47396,
-        "maxPrice": 3.83964
+        "maxPrice": 3.83964,
+        "adj_date": "2024-08-16"
       },
       {
         "date": "2024-08-23",
         "price": 4.0269,
         "minPrice": 3.825555,
-        "maxPrice": 4.228245
+        "maxPrice": 4.228245,
+        "adj_date": "2024-08-23"
       },
       {
         "date": "2024-08-30",
         "price": 4.3469,
         "minPrice": 4.129555,
-        "maxPrice": 4.564245
+        "maxPrice": 4.564245,
+        "adj_date": "2024-08-30"
       },
       {
         "date": "2024-09-06",
         "price": 4.4369,
         "minPrice": 4.2150549999999996,
-        "maxPrice": 4.658745
+        "maxPrice": 4.658745,
+        "adj_date": "2024-09-06"
       },
       {
         "date": "2024-09-13",
         "price": 4.1369,
         "minPrice": 3.9300549999999994,
-        "maxPrice": 4.343745
+        "maxPrice": 4.343745,
+        "adj_date": "2024-09-13"
       },
       {
         "date": "2024-09-20",
         "price": 2.9869,
         "minPrice": 2.8375549999999996,
-        "maxPrice": 3.136245
+        "maxPrice": 3.136245,
+        "adj_date": "2024-09-20"
       },
       {
         "date": "2024-09-27",
         "price": 2.3069,
         "minPrice": 2.191555,
-        "maxPrice": 2.422245
+        "maxPrice": 2.422245,
+        "adj_date": "2024-09-27"
       },
       {
         "date": "2024-10-04",
         "price": 2.1268000000000002,
         "minPrice": 2.02046,
-        "maxPrice": 2.2331400000000006
+        "maxPrice": 2.2331400000000006,
+        "adj_date": "2024-10-04"
       },
       {
         "date": "2024-10-11",
         "price": 2.1268000000000002,
         "minPrice": 2.02046,
-        "maxPrice": 2.2331400000000006
+        "maxPrice": 2.2331400000000006,
+        "adj_date": "2024-10-11"
       },
       {
         "date": "2024-10-18",
         "price": 2.2469,
         "minPrice": 2.134555,
-        "maxPrice": 2.359245
+        "maxPrice": 2.359245,
+        "adj_date": "2024-10-18"
       },
       {
         "date": "2024-10-25",
         "price": 3.0269,
         "minPrice": 2.875555,
-        "maxPrice": 3.178245
+        "maxPrice": 3.178245,
+        "adj_date": "2024-10-25"
       },
       {
         "date": "2024-11-01",
         "price": 4.0892,
         "minPrice": 3.88474,
-        "maxPrice": 4.29366
+        "maxPrice": 4.29366,
+        "adj_date": "2024-11-01"
       },
       {
         "date": "2024-11-08",
         "price": 4.4192,
         "minPrice": 4.19824,
-        "maxPrice": 4.64016
+        "maxPrice": 4.64016,
+        "adj_date": "2024-11-08"
       },
       {
         "date": "2024-11-15",
         "price": 4.2991,
         "minPrice": 4.084145,
-        "maxPrice": 4.514055
+        "maxPrice": 4.514055,
+        "adj_date": "2024-11-15"
       },
       {
         "date": "2024-11-22",
         "price": 4.1692,
         "minPrice": 3.96074,
-        "maxPrice": 4.3776600000000006
+        "maxPrice": 4.3776600000000006,
+        "adj_date": "2024-11-22"
       },
       {
         "date": "2024-11-29",
         "price": 4.1692,
         "minPrice": 3.96074,
-        "maxPrice": 4.3776600000000006
+        "maxPrice": 4.3776600000000006,
+        "adj_date": "2024-11-29"
       },
       {
         "date": "2024-12-06",
         "price": 3.9468,
         "minPrice": 3.74946,
-        "maxPrice": 4.14414
+        "maxPrice": 4.14414,
+        "adj_date": "2024-12-06"
       },
       {
         "date": "2024-12-13",
         "price": 3.8468999999999998,
         "minPrice": 3.6545549999999998,
-        "maxPrice": 4.039245
+        "maxPrice": 4.039245,
+        "adj_date": "2024-12-13"
       },
       {
         "date": "2024-12-20",
         "price": 4.5568,
         "minPrice": 4.3289599999999995,
-        "maxPrice": 4.7846400000000004
+        "maxPrice": 4.7846400000000004,
+        "adj_date": "2024-12-20"
       },
       {
         "date": "2024-12-27",
         "price": 5.5927,
         "minPrice": 5.313065,
-        "maxPrice": 5.872335
+        "maxPrice": 5.872335,
+        "adj_date": "2024-12-27"
       },
       {
         "date": "2025-01-03",
         "price": 5.8328,
         "minPrice": 5.54116,
-        "maxPrice": 6.12444
+        "maxPrice": 6.12444,
+        "adj_date": "2025-01-03"
       },
       {
         "date": "2025-01-10",
         "price": 5.9927,
         "minPrice": 5.693065,
-        "maxPrice": 6.2923350000000005
+        "maxPrice": 6.2923350000000005,
+        "adj_date": "2025-01-10"
       },
       {
         "date": "2025-01-17",
         "price": 6.1427,
         "minPrice": 5.835564999999999,
-        "maxPrice": 6.449835
+        "maxPrice": 6.449835,
+        "adj_date": "2025-01-17"
       },
       {
         "date": "2025-01-24",
         "price": 6.5727,
         "minPrice": 6.244065,
-        "maxPrice": 6.901335
+        "maxPrice": 6.901335,
+        "adj_date": "2025-01-24"
       },
       {
         "date": "2025-01-26",
         "price": 7.5363,
         "minPrice": 7.39,
         "maxPrice": 7.66,
-        "storeCount": 0
+        "storeCount": 0,
+        "adj_date": "2025-01-24"
       },
       {
         "date": "2025-02-02",
         "price": 7.8763,
         "minPrice": 7.73,
         "maxPrice": 8,
-        "storeCount": 0
+        "storeCount": 0,
+        "adj_date": "2025-01-31"
       },
       {
         "date": "2025-02-09",
         "price": 8.1563,
         "minPrice": 8.01,
         "maxPrice": 8.28,
-        "storeCount": 0
+        "storeCount": 0,
+        "adj_date": "2025-02-07"
       },
       {
         "date": "2025-02-16",
         "price": 8.3988,
         "minPrice": 8.26,
         "maxPrice": 8.52,
-        "storeCount": 0
+        "storeCount": 0,
+        "adj_date": "2025-02-14"
       }
     ]
   },
@@ -402,420 +462,480 @@
         "price": 3.99,
         "minPrice": 3.99,
         "maxPrice": 3.99,
-        "storeCount": 8842
+        "storeCount": 8842,
+        "adj_date": "2024-01-01"
       },
       {
         "date": "2024-01-08",
         "price": 3.11,
         "minPrice": 3.11,
         "maxPrice": 3.11,
-        "storeCount": 5765
+        "storeCount": 5765,
+        "adj_date": "2024-01-05"
       },
       {
         "date": "2024-01-15",
         "price": 3.19,
         "minPrice": 3.19,
         "maxPrice": 3.19,
-        "storeCount": 8546
+        "storeCount": 8546,
+        "adj_date": "2024-01-12"
       },
       {
         "date": "2024-01-22",
         "price": 3.44,
         "minPrice": 3.44,
         "maxPrice": 3.44,
-        "storeCount": 7245
+        "storeCount": 7245,
+        "adj_date": "2024-01-19"
       },
       {
         "date": "2024-01-29",
         "price": 3.43,
         "minPrice": 3.43,
         "maxPrice": 3.43,
-        "storeCount": 7512
+        "storeCount": 7512,
+        "adj_date": "2024-01-26"
       },
       {
         "date": "2024-02-05",
         "price": 3.63,
         "minPrice": 3.63,
         "maxPrice": 3.63,
-        "storeCount": 8289
+        "storeCount": 8289,
+        "adj_date": "2024-02-02"
       },
       {
         "date": "2024-02-12",
         "price": 3.41,
         "minPrice": 3.41,
         "maxPrice": 3.41,
-        "storeCount": 7283
+        "storeCount": 7283,
+        "adj_date": "2024-02-09"
       },
       {
         "date": "2024-02-19",
         "price": 3.47,
         "minPrice": 3.47,
         "maxPrice": 3.47,
-        "storeCount": 7052
+        "storeCount": 7052,
+        "adj_date": "2024-02-16"
       },
       {
         "date": "2024-02-26",
         "price": 3.69,
         "minPrice": 3.69,
         "maxPrice": 3.69,
-        "storeCount": 9642
+        "storeCount": 9642,
+        "adj_date": "2024-02-23"
       },
       {
         "date": "2024-03-04",
         "price": 3.2,
         "minPrice": 3.2,
         "maxPrice": 3.2,
-        "storeCount": 6629
+        "storeCount": 6629,
+        "adj_date": "2024-03-01"
       },
       {
         "date": "2024-03-11",
         "price": 3.05,
         "minPrice": 3.05,
         "maxPrice": 3.05,
-        "storeCount": 8867
+        "storeCount": 8867,
+        "adj_date": "2024-03-08"
       },
       {
         "date": "2024-03-18",
         "price": 3.95,
         "minPrice": 3.95,
         "maxPrice": 3.95,
-        "storeCount": 9015
+        "storeCount": 9015,
+        "adj_date": "2024-03-15"
       },
       {
         "date": "2024-03-25",
         "price": 3.65,
         "minPrice": 3.65,
         "maxPrice": 3.65,
-        "storeCount": 12678
+        "storeCount": 12678,
+        "adj_date": "2024-03-22"
       },
       {
         "date": "2024-04-01",
         "price": 3.24,
         "minPrice": 3.24,
         "maxPrice": 3.24,
-        "storeCount": 8179
+        "storeCount": 8179,
+        "adj_date": "2024-03-29"
       },
       {
         "date": "2024-04-08",
         "price": 3.28,
         "minPrice": 3.28,
         "maxPrice": 3.28,
-        "storeCount": 6119
+        "storeCount": 6119,
+        "adj_date": "2024-04-05"
       },
       {
         "date": "2024-04-15",
         "price": 3.28,
         "minPrice": 3.28,
         "maxPrice": 3.28,
-        "storeCount": 5900
+        "storeCount": 5900,
+        "adj_date": "2024-04-12"
       },
       {
         "date": "2024-04-22",
         "price": 3.36,
         "minPrice": 3.36,
         "maxPrice": 3.36,
-        "storeCount": 4432
+        "storeCount": 4432,
+        "adj_date": "2024-04-19"
       },
       {
         "date": "2024-04-29",
         "price": 3.8,
         "minPrice": 3.8,
         "maxPrice": 3.8,
-        "storeCount": 7709
+        "storeCount": 7709,
+        "adj_date": "2024-04-26"
       },
       {
         "date": "2024-05-06",
         "price": 3.13,
         "minPrice": 3.13,
         "maxPrice": 3.13,
-        "storeCount": 4637
+        "storeCount": 4637,
+        "adj_date": "2024-05-03"
       },
       {
         "date": "2024-05-13",
         "price": 3.42,
         "minPrice": 3.42,
         "maxPrice": 3.42,
-        "storeCount": 7627
+        "storeCount": 7627,
+        "adj_date": "2024-05-10"
       },
       {
         "date": "2024-05-20",
         "price": 3.25,
         "minPrice": 3.25,
         "maxPrice": 3.25,
-        "storeCount": 5747
+        "storeCount": 5747,
+        "adj_date": "2024-05-17"
       },
       {
         "date": "2024-05-27",
         "price": 3.16,
         "minPrice": 3.16,
         "maxPrice": 3.16,
-        "storeCount": 7235
+        "storeCount": 7235,
+        "adj_date": "2024-05-24"
       },
       {
         "date": "2024-06-03",
         "price": 3.48,
         "minPrice": 3.48,
         "maxPrice": 3.48,
-        "storeCount": 8760
+        "storeCount": 8760,
+        "adj_date": "2024-05-31"
       },
       {
         "date": "2024-06-10",
         "price": 3.65,
         "minPrice": 3.65,
         "maxPrice": 3.65,
-        "storeCount": 8840
+        "storeCount": 8840,
+        "adj_date": "2024-06-07"
       },
       {
         "date": "2024-06-17",
         "price": 3.59,
         "minPrice": 3.59,
         "maxPrice": 3.59,
-        "storeCount": 7288
+        "storeCount": 7288,
+        "adj_date": "2024-06-14"
       },
       {
         "date": "2024-06-24",
         "price": 3.2,
         "minPrice": 3.2,
         "maxPrice": 3.2,
-        "storeCount": 4657
+        "storeCount": 4657,
+        "adj_date": "2024-06-21"
       },
       {
         "date": "2024-07-01",
         "price": 3.15,
         "minPrice": 3.15,
         "maxPrice": 3.15,
-        "storeCount": 6713
+        "storeCount": 6713,
+        "adj_date": "2024-06-28"
       },
       {
         "date": "2024-07-08",
         "price": 3.53,
         "minPrice": 3.53,
         "maxPrice": 3.53,
-        "storeCount": 4008
+        "storeCount": 4008,
+        "adj_date": "2024-07-05"
       },
       {
         "date": "2024-07-15",
         "price": 3.47,
         "minPrice": 3.47,
         "maxPrice": 3.47,
-        "storeCount": 5949
+        "storeCount": 5949,
+        "adj_date": "2024-07-12"
       },
       {
         "date": "2024-07-22",
         "price": 3.43,
         "minPrice": 3.43,
         "maxPrice": 3.43,
-        "storeCount": 7073
+        "storeCount": 7073,
+        "adj_date": "2024-07-19"
       },
       {
         "date": "2024-07-29",
         "price": 3.05,
         "minPrice": 3.05,
         "maxPrice": 3.05,
-        "storeCount": 6727
+        "storeCount": 6727,
+        "adj_date": "2024-07-26"
       },
       {
         "date": "2024-08-05",
         "price": 3.37,
         "minPrice": 3.37,
         "maxPrice": 3.37,
-        "storeCount": 4902
+        "storeCount": 4902,
+        "adj_date": "2024-08-02"
       },
       {
         "date": "2024-08-12",
         "price": 3.42,
         "minPrice": 3.42,
         "maxPrice": 3.42,
-        "storeCount": 6207
+        "storeCount": 6207,
+        "adj_date": "2024-08-09"
       },
       {
         "date": "2024-08-19",
         "price": 3.33,
         "minPrice": 3.33,
         "maxPrice": 3.33,
-        "storeCount": 5139
+        "storeCount": 5139,
+        "adj_date": "2024-08-16"
       },
       {
         "date": "2024-08-26",
         "price": 3.25,
         "minPrice": 3.25,
         "maxPrice": 3.25,
-        "storeCount": 5290
+        "storeCount": 5290,
+        "adj_date": "2024-08-23"
       },
       {
         "date": "2024-09-02",
         "price": 3.39,
         "minPrice": 3.39,
         "maxPrice": 3.39,
-        "storeCount": 6156
+        "storeCount": 6156,
+        "adj_date": "2024-08-30"
       },
       {
         "date": "2024-09-09",
         "price": 3.36,
         "minPrice": 3.36,
         "maxPrice": 3.36,
-        "storeCount": 4701
+        "storeCount": 4701,
+        "adj_date": "2024-09-06"
       },
       {
         "date": "2024-09-16",
         "price": 3.3,
         "minPrice": 3.3,
         "maxPrice": 3.3,
-        "storeCount": 6015
+        "storeCount": 6015,
+        "adj_date": "2024-09-13"
       },
       {
         "date": "2024-09-23",
         "price": 3.23,
         "minPrice": 3.23,
         "maxPrice": 3.23,
-        "storeCount": 5426
+        "storeCount": 5426,
+        "adj_date": "2024-09-20"
       },
       {
         "date": "2024-09-30",
         "price": 3.42,
         "minPrice": 3.42,
         "maxPrice": 3.42,
-        "storeCount": 7209
+        "storeCount": 7209,
+        "adj_date": "2024-09-27"
       },
       {
         "date": "2024-10-07",
         "price": 3.51,
         "minPrice": 3.51,
         "maxPrice": 3.51,
-        "storeCount": 5289
+        "storeCount": 5289,
+        "adj_date": "2024-10-04"
       },
       {
         "date": "2024-10-14",
         "price": 3.58,
         "minPrice": 3.58,
         "maxPrice": 3.58,
-        "storeCount": 4896
+        "storeCount": 4896,
+        "adj_date": "2024-10-11"
       },
       {
         "date": "2024-10-21",
         "price": 3.54,
         "minPrice": 3.54,
         "maxPrice": 3.54,
-        "storeCount": 4668
+        "storeCount": 4668,
+        "adj_date": "2024-10-18"
       },
       {
         "date": "2024-10-28",
         "price": 3.54,
         "minPrice": 3.54,
         "maxPrice": 3.54,
-        "storeCount": 6382
+        "storeCount": 6382,
+        "adj_date": "2024-10-25"
       },
       {
         "date": "2024-11-04",
         "price": 3.5,
         "minPrice": 3.5,
         "maxPrice": 3.5,
-        "storeCount": 6295
+        "storeCount": 6295,
+        "adj_date": "2024-11-01"
       },
       {
         "date": "2024-11-11",
         "price": 3.43,
         "minPrice": 3.43,
         "maxPrice": 3.43,
-        "storeCount": 5288
+        "storeCount": 5288,
+        "adj_date": "2024-11-08"
       },
       {
         "date": "2024-11-18",
         "price": 3.43,
         "minPrice": 3.43,
         "maxPrice": 3.43,
-        "storeCount": 6107
+        "storeCount": 6107,
+        "adj_date": "2024-11-15"
       },
       {
         "date": "2024-11-25",
         "price": 3.46,
         "minPrice": 3.46,
         "maxPrice": 3.46,
-        "storeCount": 5927
+        "storeCount": 5927,
+        "adj_date": "2024-11-22"
       },
       {
         "date": "2024-12-02",
         "price": 3.36,
         "minPrice": 3.36,
         "maxPrice": 3.36,
-        "storeCount": 5956
+        "storeCount": 5956,
+        "adj_date": "2024-11-29"
       },
       {
         "date": "2024-12-09",
         "price": 3.4,
         "minPrice": 3.4,
         "maxPrice": 3.4,
-        "storeCount": 6263
+        "storeCount": 6263,
+        "adj_date": "2024-12-06"
       },
       {
         "date": "2024-12-16",
         "price": 3.4,
         "minPrice": 3.4,
         "maxPrice": 3.4,
-        "storeCount": 5897
+        "storeCount": 5897,
+        "adj_date": "2024-12-13"
       },
       {
         "date": "2024-12-23",
         "price": 3.4,
         "minPrice": 3.4,
         "maxPrice": 3.4,
-        "storeCount": 6022
+        "storeCount": 6022,
+        "adj_date": "2024-12-20"
       },
       {
         "date": "2024-12-30",
         "price": 3.37,
         "minPrice": 3.37,
         "maxPrice": 3.37,
-        "storeCount": 6586
+        "storeCount": 6586,
+        "adj_date": "2024-12-27"
       },
       {
         "date": "2025-01-06",
         "price": 3.19,
         "minPrice": 3.19,
         "maxPrice": 3.19,
-        "storeCount": 6180
+        "storeCount": 6180,
+        "adj_date": "2025-01-03"
       },
       {
         "date": "2025-01-13",
         "price": 3.13,
         "minPrice": 3.13,
         "maxPrice": 3.13,
-        "storeCount": 5425
+        "storeCount": 5425,
+        "adj_date": "2025-01-10"
       },
       {
         "date": "2025-01-20",
         "price": 3.23,
         "minPrice": 3.23,
         "maxPrice": 3.23,
-        "storeCount": 3867
+        "storeCount": 3867,
+        "adj_date": "2025-01-17"
       },
       {
         "date": "2025-01-27",
         "price": 3.19,
         "minPrice": 3.19,
         "maxPrice": 3.19,
-        "storeCount": 6216
+        "storeCount": 6216,
+        "adj_date": "2025-01-24"
       },
       {
         "date": "2025-02-03",
         "price": 3.19,
         "minPrice": 3.19,
         "maxPrice": 3.19,
-        "storeCount": 5600
+        "storeCount": 5600,
+        "adj_date": "2025-01-31"
       },
       {
         "date": "2025-02-10",
         "price": 3.2,
         "minPrice": 3.2,
         "maxPrice": 3.2,
-        "storeCount": 5219
+        "storeCount": 5219,
+        "adj_date": "2025-02-07"
       },
       {
         "date": "2025-02-17",
         "price": 3.44,
         "minPrice": 3.44,
         "maxPrice": 3.44,
-        "storeCount": 5533
+        "storeCount": 5533,
+        "adj_date": "2025-02-14"
       }
     ]
   }
