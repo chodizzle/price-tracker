@@ -168,7 +168,7 @@ function BasketChart({ data, quantities }) {
               />
               <YAxis 
                 domain={[minPrice, maxPrice]}
-                tickFormatter={(value) => `${value}`}
+                tickFormatter={(value) => `${value.toFixed(2)}`}
                 width={50}
                 tick={{ fontSize: 12 }}
               />
@@ -184,7 +184,7 @@ function BasketChart({ data, quantities }) {
                 activeDot={{ r: 6 }}
                 connectNulls={true}
               />
-              {Object.keys(COMMODITY_CONFIG).map(commodity => (
+              {/* {Object.keys(COMMODITY_CONFIG).map(commodity => (
                 <Line
                   key={commodity}
                   type="monotone"
@@ -197,7 +197,7 @@ function BasketChart({ data, quantities }) {
                   activeDot={{ r: 5 }}
                   connectNulls={true}
                 />
-              ))}
+              ))} */}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -276,6 +276,12 @@ export default function CommodityPriceTracker() {
             quantities={priceData.metadata.quantities}
           />
           
+          <div className="mt-8 mb-12 text-center text-sm text-gray-600 max-w-2xl mx-auto">
+            <p className="font-medium">&quot;2024 Avg&quot; represents the annual average price for 2024.</p>
+            <p className="mt-2">Prices are aligned to Fridays for consistent comparison. The basket total is the sum of individual item prices for a basic weekly grocery purchase.</p>
+            <p className="mt-2">Scroll down to see individual commodity price trends.</p>
+          </div>
+
           {/* Commodity section header */}
           <h2 className="text-2xl font-bold text-center mt-16 mb-8">Individual Commodity Prices</h2>
           
@@ -290,12 +296,6 @@ export default function CommodityPriceTracker() {
                 latest={priceData.charts[commodity].latest}
               />
             ))}
-          </div>
-          
-          <div className="mt-8 mb-12 text-center text-sm text-gray-600 max-w-2xl mx-auto">
-            <p className="font-medium">&quot;2024 Avg&quot; represents the annual average price for 2024.</p>
-            <p className="mt-2">Prices are aligned to Fridays for consistent comparison. The basket total is the sum of individual item prices for a basic weekly grocery purchase.</p>
-            <p className="mt-2">Scroll down to see individual commodity price trends.</p>
           </div>
         </>
       )}
