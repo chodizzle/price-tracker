@@ -1,44 +1,38 @@
-// src/app/api/prices/route.js
-const { NextResponse } = require('next/server');
-const fs = require('fs').promises;
-const path = require('path');
-
-// Path to the prices.json file
-const PRICES_FILE = path.join(process.cwd(), 'data', 'prices.json');
+// src/app/api/combined-prices/route.js
+import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 /**
- * API route to get price data from the local prices.json file
+ * API route to get combined price data
  */
-async function GET(request) {
+export async function GET() {
   try {
-    // Read the prices data from file
-    const fileData = await fs.readFile(PRICES_FILE, 'utf8');
-    const pricesData = JSON.parse(fileData);
+    // Path to the combined-prices.json file
+    const filePath = path.join(process.cwd(), 'data', 'combined-prices.json');
     
-    // Get commodity from query string (optional - defaults to all commodities)
-    const { searchParams } = new URL(request.url);
-    const commodity = searchParams.get('commodity')?.toLowerCase();
-    
-    // If a specific commodity is requested, return only that data
-    if (commodity && pricesData[commodity]) {
-      return NextResponse.json({
-        success: true,
-        data: { [commodity]: pricesData[commodity] }
-      });
+    // Check if file exists
+    if (!fs.existsSync(filePath)) {
+      return NextResponse.json(
+        { success: false, error: 'Combined price data not available' },
+        { status: 404 }
+      );
     }
     
-    // Otherwise return all commodity data
+    // Read and parse the file
+    const fileData = await fs.promises.readFile(filePath, 'utf8');
+    const priceData = JSON.parse(fileData);
+    
+    // Return the data
     return NextResponse.json({
       success: true,
-      data: pricesData
+      data: priceData
     });
   } catch (error) {
-    console.error('Error reading prices data:', error);
+    console.error('Error reading combined price data:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to read price data' },
+      { success: false, error: 'Failed to read combined price data' },
       { status: 500 }
     );
   }
 }
-
-module.exports = { GET };

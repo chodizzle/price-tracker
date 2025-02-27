@@ -6,6 +6,7 @@ require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 const { initializeEggPrices } = require('./src/scripts/init-egg-prices');
 const { initializeMilkPrices } = require('./src/scripts/init-milk-prices');
 const { priceDataManager } = require('./src/lib/priceDataManager');
+const { processPrices } = require('./src/scripts/process-prices');
 
 /**
  * Main initialization function
@@ -27,6 +28,12 @@ async function initializeAll() {
     console.log(`Initialized ${milkResult?.prices?.length || 0} milk price records`);
     console.log('Milk prices baseline:', milkResult?.baseline);
     
+    // Process the combined data
+    console.log('\n--- PROCESSING COMBINED DATA ---');
+    const processedData = await processPrices();
+    console.log(`Processed ${processedData.alignedPrices.length} aligned price records`);
+    console.log(`Created ${processedData.basket.length} basket price points`);
+    
     // Show final data statistics
     console.log('\n--- INITIALIZATION COMPLETE ---');
     console.log('Final data structure:', {
@@ -43,6 +50,10 @@ async function initializeAll() {
           first: priceDataManager.data.milk?.prices[0]?.date,
           last: priceDataManager.data.milk?.prices[priceDataManager.data.milk?.prices?.length - 1]?.date
         }
+      },
+      processed: {
+        alignedPrices: processedData.alignedPrices.length,
+        basketPoints: processedData.basket.length
       }
     });
     
@@ -58,6 +69,7 @@ const updateArg = process.argv[2];
 if (updateArg === 'update-milk') {
   console.log('Updating only milk prices...');
   initializeMilkPrices()
+    .then(() => processPrices())
     .then(() => console.log('Milk prices update complete!'))
     .catch(error => {
       console.error('Failed to update milk prices:', error);
@@ -66,6 +78,7 @@ if (updateArg === 'update-milk') {
 } else if (updateArg === 'update-eggs') {
   console.log('Updating only egg prices...');
   initializeEggPrices()
+    .then(() => processPrices())
     .then(() => console.log('Egg prices update complete!'))
     .catch(error => {
       console.error('Failed to update egg prices:', error);
