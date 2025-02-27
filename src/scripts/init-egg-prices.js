@@ -159,7 +159,7 @@ async function fetchCurrentEggPrices(fromDate, toDate) {
         item.grade === 'Grade A'
       )
       .map(item => ({
-        date: new Date(item.report_begin_date).toISOString().split('T')[0],
+        date: new Date(item.report_end_date || item.report_begin_date).toISOString().split('T')[0],
         price: parseFloat(item.avg_price) / 100,  // Convert cents to dollars
         minPrice: parseFloat(item.price_low) / 100,
         maxPrice: parseFloat(item.price_high) / 100

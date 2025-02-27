@@ -60,19 +60,19 @@ async function fetchMilkPrices(fromDate, toDate) {
     
     // Process and transform the data
     const milkPrices = data.results
-      .filter(item => 
-        item.region === 'National' && 
-        item.package === 'Gallon' && 
-        item.organic === 'No' &&
-        item.wtd_avg_price !== null
-      )
-      .map(item => ({
-        date: new Date(item.report_begin_date).toISOString().split('T')[0],
-        price: parseFloat(item.wtd_avg_price),
-        minPrice: parseFloat(item.price_min || item.wtd_avg_price),
-        maxPrice: parseFloat(item.price_max || item.wtd_avg_price),
-        storeCount: parseInt(item.store_count || 0)
-      }));
+  .filter(item => 
+    item.region === 'National' && 
+    item.package === 'Gallon' && 
+    item.organic === 'No' &&
+    item.wtd_avg_price !== null
+  )
+  .map(item => ({
+    date: new Date(item.report_end_date || item.report_begin_date).toISOString().split('T')[0],
+    price: parseFloat(item.wtd_avg_price),
+    minPrice: parseFloat(item.price_min || item.wtd_avg_price),
+    maxPrice: parseFloat(item.price_max || item.wtd_avg_price),
+    storeCount: parseInt(item.store_count || 0)
+  }));
     
     // Sort by date
     return milkPrices.sort((a, b) => a.date.localeCompare(b.date));
