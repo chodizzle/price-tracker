@@ -1,0 +1,602 @@
+{
+  "metadata": {
+    "lastProcessed": "2025-02-27T03:53:19.959Z",
+    "quantities": {
+      "eggs": 1,
+      "milk": 1
+    },
+    "commodities": {
+      "eggs": {
+        "lastUpdated": "2025-02-27T03:09:37.615Z",
+        "dataSource": {
+          "2024": "static-file",
+          "2025": "usda-api"
+        },
+        "baseline": {
+          "2024": {
+            "annualMean": 3.149930357142857,
+            "min": 1.5569,
+            "max": 6.5727
+          }
+        },
+        "priceCount": 64
+      },
+      "milk": {
+        "lastUpdated": "2025-02-27T03:08:34.365Z",
+        "dataSource": {
+          "2024": "usda-api",
+          "2025": "usda-api"
+        },
+        "baseline": {
+          "2024": {
+            "annualMean": 3.4096153846153854,
+            "min": 3.05,
+            "max": 3.99
+          }
+        },
+        "priceCount": 120
+      }
+    },
+    "latest": {
+      "basketPrice": 11.8269,
+      "date": "2025-02-21",
+      "vsBaseline": {
+        "amount": 5.267354258241758,
+        "percent": 80.30059497427757
+      }
+    }
+  },
+  "alignedPrices": [
+    {
+      "commodity": "milk",
+      "date": "2024 Avg",
+      "adjDate": "2024 Avg",
+      "price": 3.4096153846153854,
+      "minPrice": 3.4096153846153854,
+      "maxPrice": 3.4096153846153854,
+      "isAggregated": false,
+      "priceCount": 1
+    },
+    {
+      "commodity": "eggs",
+      "date": "2024 Avg",
+      "adjDate": "2024 Avg",
+      "price": 3.149930357142857,
+      "minPrice": 3.149930357142857,
+      "maxPrice": 3.149930357142857,
+      "isAggregated": false,
+      "priceCount": 1
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-01-03",
+      "adjDate": "2025-01-03",
+      "price": 5.8328,
+      "minPrice": 5.54116,
+      "maxPrice": 6.12444,
+      "isAggregated": false,
+      "priceCount": 1
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-01-03",
+      "adjDate": "2025-01-03",
+      "price": 3.2800000000000002,
+      "minPrice": 3.19,
+      "maxPrice": 3.37,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-01-10",
+      "adjDate": "2025-01-10",
+      "price": 5.9927,
+      "minPrice": 5.693065,
+      "maxPrice": 6.2923350000000005,
+      "isAggregated": false,
+      "priceCount": 1
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-01-10",
+      "adjDate": "2025-01-10",
+      "price": 3.16,
+      "minPrice": 3.13,
+      "maxPrice": 3.19,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-01-17",
+      "adjDate": "2025-01-17",
+      "price": 6.1427,
+      "minPrice": 5.835564999999999,
+      "maxPrice": 6.449835,
+      "isAggregated": false,
+      "priceCount": 1
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-01-17",
+      "adjDate": "2025-01-17",
+      "price": 3.1799999999999997,
+      "minPrice": 3.13,
+      "maxPrice": 3.23,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-01-24",
+      "adjDate": "2025-01-24",
+      "price": 7.0545,
+      "minPrice": 6.244065,
+      "maxPrice": 7.66,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-01-24",
+      "adjDate": "2025-01-24",
+      "price": 3.21,
+      "minPrice": 3.19,
+      "maxPrice": 3.23,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-02-01",
+      "adjDate": "2025-01-31",
+      "price": 7.6966,
+      "minPrice": 7.38,
+      "maxPrice": 8,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-01-31",
+      "adjDate": "2025-01-31",
+      "price": 3.19,
+      "minPrice": 3.19,
+      "maxPrice": 3.19,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-02-08",
+      "adjDate": "2025-02-07",
+      "price": 8.0066,
+      "minPrice": 7.72,
+      "maxPrice": 8.28,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-02-07",
+      "adjDate": "2025-02-07",
+      "price": 3.1950000000000003,
+      "minPrice": 3.19,
+      "maxPrice": 3.2,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-02-15",
+      "adjDate": "2025-02-14",
+      "price": 8.26785,
+      "minPrice": 8,
+      "maxPrice": 8.52,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-02-14",
+      "adjDate": "2025-02-14",
+      "price": 3.3200000000000003,
+      "minPrice": 3.2,
+      "maxPrice": 3.44,
+      "isAggregated": true,
+      "priceCount": 2
+    },
+    {
+      "commodity": "eggs",
+      "date": "2025-02-22",
+      "adjDate": "2025-02-21",
+      "price": 8.3869,
+      "minPrice": 8.25,
+      "maxPrice": 8.52,
+      "isAggregated": false,
+      "priceCount": 1
+    },
+    {
+      "commodity": "milk",
+      "date": "2025-02-21",
+      "adjDate": "2025-02-21",
+      "price": 3.44,
+      "minPrice": 3.44,
+      "maxPrice": 3.44,
+      "isAggregated": false,
+      "priceCount": 1
+    }
+  ],
+  "basket": [
+    {
+      "date": "2024 Avg",
+      "adjDate": "2024 Avg",
+      "basketPrice": 6.559545741758242,
+      "prices": {
+        "eggs": 3.149930357142857,
+        "milk": 3.4096153846153854
+      },
+      "formattedDate": "2024 Avg",
+      "isComplete": true
+    },
+    {
+      "date": "2025-01-03",
+      "adjDate": "2025-01-03",
+      "basketPrice": 9.1128,
+      "prices": {
+        "eggs": 5.8328,
+        "milk": 3.2800000000000002
+      },
+      "formattedDate": "Jan 2, 2025",
+      "isComplete": true
+    },
+    {
+      "date": "2025-01-10",
+      "adjDate": "2025-01-10",
+      "basketPrice": 9.1527,
+      "prices": {
+        "eggs": 5.9927,
+        "milk": 3.16
+      },
+      "formattedDate": "Jan 9, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.03989999999999938,
+        "percent": 0.43784566763233457
+      }
+    },
+    {
+      "date": "2025-01-17",
+      "adjDate": "2025-01-17",
+      "basketPrice": 9.3227,
+      "prices": {
+        "eggs": 6.1427,
+        "milk": 3.1799999999999997
+      },
+      "formattedDate": "Jan 16, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.16999999999999993,
+        "percent": 1.8573754192751857
+      }
+    },
+    {
+      "date": "2025-01-24",
+      "adjDate": "2025-01-24",
+      "basketPrice": 10.2645,
+      "prices": {
+        "eggs": 7.0545,
+        "milk": 3.21
+      },
+      "formattedDate": "Jan 23, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.9418000000000006,
+        "percent": 10.102223604749705
+      }
+    },
+    {
+      "date": "2025-01-31",
+      "adjDate": "2025-01-31",
+      "basketPrice": 10.8866,
+      "prices": {
+        "eggs": 7.6966,
+        "milk": 3.19
+      },
+      "formattedDate": "Jan 30, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.6220999999999997,
+        "percent": 6.060694627112861
+      }
+    },
+    {
+      "date": "2025-02-07",
+      "adjDate": "2025-02-07",
+      "basketPrice": 11.201600000000001,
+      "prices": {
+        "eggs": 8.0066,
+        "milk": 3.1950000000000003
+      },
+      "formattedDate": "Feb 6, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.3150000000000013,
+        "percent": 2.893465361086118
+      }
+    },
+    {
+      "date": "2025-02-14",
+      "adjDate": "2025-02-14",
+      "basketPrice": 11.58785,
+      "prices": {
+        "eggs": 8.26785,
+        "milk": 3.3200000000000003
+      },
+      "formattedDate": "Feb 13, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.38624999999999865,
+        "percent": 3.448168118840153
+      }
+    },
+    {
+      "date": "2025-02-21",
+      "adjDate": "2025-02-21",
+      "basketPrice": 11.8269,
+      "prices": {
+        "eggs": 8.3869,
+        "milk": 3.44
+      },
+      "formattedDate": "Feb 20, 2025",
+      "isComplete": true,
+      "change": {
+        "amount": 0.23905000000000065,
+        "percent": 2.062936610328928
+      }
+    }
+  ],
+  "charts": {
+    "eggs": {
+      "data": [
+        {
+          "date": "2024 Avg",
+          "adjDate": "2024 Avg",
+          "price": 3.149930357142857,
+          "minPrice": 3.149930357142857,
+          "maxPrice": 3.149930357142857,
+          "formattedDate": "2024 Avg"
+        },
+        {
+          "date": "2025-01-03",
+          "adjDate": "2025-01-03",
+          "price": 5.8328,
+          "minPrice": 5.54116,
+          "maxPrice": 6.12444,
+          "formattedDate": "Jan 2, 2025"
+        },
+        {
+          "date": "2025-01-10",
+          "adjDate": "2025-01-10",
+          "price": 5.9927,
+          "minPrice": 5.693065,
+          "maxPrice": 6.2923350000000005,
+          "formattedDate": "Jan 9, 2025",
+          "change": {
+            "amount": 0.15990000000000038,
+            "percent": 2.741393498834186
+          }
+        },
+        {
+          "date": "2025-01-17",
+          "adjDate": "2025-01-17",
+          "price": 6.1427,
+          "minPrice": 5.835564999999999,
+          "maxPrice": 6.449835,
+          "formattedDate": "Jan 16, 2025",
+          "change": {
+            "amount": 0.14999999999999947,
+            "percent": 2.503045371869099
+          }
+        },
+        {
+          "date": "2025-01-24",
+          "adjDate": "2025-01-24",
+          "price": 7.0545,
+          "minPrice": 6.244065,
+          "maxPrice": 7.66,
+          "formattedDate": "Jan 23, 2025",
+          "change": {
+            "amount": 0.9118000000000004,
+            "percent": 14.843635534862527
+          }
+        },
+        {
+          "date": "2025-02-01",
+          "adjDate": "2025-01-31",
+          "price": 7.6966,
+          "minPrice": 7.38,
+          "maxPrice": 8,
+          "formattedDate": "Jan 30, 2025",
+          "change": {
+            "amount": 0.6421000000000001,
+            "percent": 9.101991636544051
+          }
+        },
+        {
+          "date": "2025-02-08",
+          "adjDate": "2025-02-07",
+          "price": 8.0066,
+          "minPrice": 7.72,
+          "maxPrice": 8.28,
+          "formattedDate": "Feb 6, 2025",
+          "change": {
+            "amount": 0.3100000000000005,
+            "percent": 4.02775251409714
+          }
+        },
+        {
+          "date": "2025-02-15",
+          "adjDate": "2025-02-14",
+          "price": 8.26785,
+          "minPrice": 8,
+          "maxPrice": 8.52,
+          "formattedDate": "Feb 13, 2025",
+          "change": {
+            "amount": 0.26124999999999865,
+            "percent": 3.262933080208811
+          }
+        },
+        {
+          "date": "2025-02-22",
+          "adjDate": "2025-02-21",
+          "price": 8.3869,
+          "minPrice": 8.25,
+          "maxPrice": 8.52,
+          "formattedDate": "Feb 20, 2025",
+          "change": {
+            "amount": 0.11905000000000143,
+            "percent": 1.4399148508983768
+          }
+        }
+      ],
+      "latest": {
+        "date": "2025-02-22",
+        "adjDate": "2025-02-21",
+        "price": 8.3869,
+        "minPrice": 8.25,
+        "maxPrice": 8.52,
+        "formattedDate": "Feb 20, 2025",
+        "change": {
+          "amount": 0.11905000000000143,
+          "percent": 1.4399148508983768
+        }
+      },
+      "vsBaseline": {
+        "amount": 5.236969642857144,
+        "percent": 166.25668027807873
+      }
+    },
+    "milk": {
+      "data": [
+        {
+          "date": "2024 Avg",
+          "adjDate": "2024 Avg",
+          "price": 3.4096153846153854,
+          "minPrice": 3.4096153846153854,
+          "maxPrice": 3.4096153846153854,
+          "formattedDate": "2024 Avg"
+        },
+        {
+          "date": "2025-01-03",
+          "adjDate": "2025-01-03",
+          "price": 3.2800000000000002,
+          "minPrice": 3.19,
+          "maxPrice": 3.37,
+          "formattedDate": "Jan 2, 2025"
+        },
+        {
+          "date": "2025-01-10",
+          "adjDate": "2025-01-10",
+          "price": 3.16,
+          "minPrice": 3.13,
+          "maxPrice": 3.19,
+          "formattedDate": "Jan 9, 2025",
+          "change": {
+            "amount": -0.1200000000000001,
+            "percent": -3.658536585365857
+          }
+        },
+        {
+          "date": "2025-01-17",
+          "adjDate": "2025-01-17",
+          "price": 3.1799999999999997,
+          "minPrice": 3.13,
+          "maxPrice": 3.23,
+          "formattedDate": "Jan 16, 2025",
+          "change": {
+            "amount": 0.019999999999999574,
+            "percent": 0.6329113924050498
+          }
+        },
+        {
+          "date": "2025-01-24",
+          "adjDate": "2025-01-24",
+          "price": 3.21,
+          "minPrice": 3.19,
+          "maxPrice": 3.23,
+          "formattedDate": "Jan 23, 2025",
+          "change": {
+            "amount": 0.03000000000000025,
+            "percent": 0.9433962264151022
+          }
+        },
+        {
+          "date": "2025-01-31",
+          "adjDate": "2025-01-31",
+          "price": 3.19,
+          "minPrice": 3.19,
+          "maxPrice": 3.19,
+          "formattedDate": "Jan 30, 2025",
+          "change": {
+            "amount": -0.020000000000000018,
+            "percent": -0.6230529595015583
+          }
+        },
+        {
+          "date": "2025-02-07",
+          "adjDate": "2025-02-07",
+          "price": 3.1950000000000003,
+          "minPrice": 3.19,
+          "maxPrice": 3.2,
+          "formattedDate": "Feb 6, 2025",
+          "change": {
+            "amount": 0.0050000000000003375,
+            "percent": 0.1567398119122363
+          }
+        },
+        {
+          "date": "2025-02-14",
+          "adjDate": "2025-02-14",
+          "price": 3.3200000000000003,
+          "minPrice": 3.2,
+          "maxPrice": 3.44,
+          "formattedDate": "Feb 13, 2025",
+          "change": {
+            "amount": 0.125,
+            "percent": 3.9123630672926444
+          }
+        },
+        {
+          "date": "2025-02-21",
+          "adjDate": "2025-02-21",
+          "price": 3.44,
+          "minPrice": 3.44,
+          "maxPrice": 3.44,
+          "formattedDate": "Feb 20, 2025",
+          "change": {
+            "amount": 0.11999999999999966,
+            "percent": 3.6144578313252906
+          }
+        }
+      ],
+      "latest": {
+        "date": "2025-02-21",
+        "adjDate": "2025-02-21",
+        "price": 3.44,
+        "minPrice": 3.44,
+        "maxPrice": 3.44,
+        "formattedDate": "Feb 20, 2025",
+        "change": {
+          "amount": 0.11999999999999966,
+          "percent": 3.6144578313252906
+        }
+      },
+      "vsBaseline": {
+        "amount": 0.030384615384614566,
+        "percent": 0.8911449520586334
+      }
+    }
+  }
+}

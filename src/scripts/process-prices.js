@@ -61,28 +61,28 @@ function formatDate(dateStr) {
 }
 
 /**
- * Calculate the basket price based on weighted commodity prices
+ * Calculate the basket price as a straight sum of items
  * @param {Object} pricesByDate - Map of prices indexed by date
- * @param {Object} weights - Commodity weights
- * @returns {number} The weighted basket price
+ * @param {Object} quantities - Commodity quantities
+ * @returns {number} The total basket price
  */
-function calculateBasketPrice(pricesByDate, weights) {
+function calculateBasketPrice(pricesByDate, quantities) {
   let totalPrice = 0;
-  let totalWeight = 0;
+  let itemCount = 0;
   
   Object.entries(pricesByDate).forEach(([commodity, price]) => {
-    const weight = weights[commodity] || 0;
-    if (weight > 0 && price !== null && price !== undefined) {
-      totalPrice += price * weight;
-      totalWeight += weight;
+    const quantity = quantities[commodity] || 0;
+    if (quantity > 0 && price !== null && price !== undefined) {
+      totalPrice += price * quantity;
+      itemCount += quantity;
     }
   });
   
   // Return null if no valid prices
-  if (totalWeight === 0) return null;
+  if (itemCount === 0) return null;
   
-  // Calculate weighted average
-  return totalPrice / totalWeight;
+  // Return the total price
+  return totalPrice;
 }
 
 /**
@@ -100,17 +100,17 @@ async function processPrices() {
     const rawData = JSON.parse(fs.readFileSync(PRICES_FILE, 'utf8'));
     console.log('Loaded raw price data with commodities:', Object.keys(rawData));
     
-    // Define commodity weights (weekly consumption)
-    const weights = {
+    // Define commodity quantities for basket
+    const quantities = {
       eggs: 1,  // 1 dozen per week
-      milk: 2   // 2 gallons per week
+      milk: 1   // 1 gallon per week
     };
     
     // Create processed data structure
     const processedData = {
       metadata: {
         lastProcessed: new Date().toISOString(),
-        weights,
+        quantities,
         commodities: {}
       },
       alignedPrices: [],
@@ -223,7 +223,7 @@ async function processPrices() {
       });
       
       // Calculate baseline basket price
-      const baselineBasketPrice = calculateBasketPrice(baselinePrices, weights);
+      const baselineBasketPrice = calculateBasketPrice(baselinePrices, quantities);
       
       if (baselineBasketPrice !== null) {
         processedData.basket.push({
@@ -232,7 +232,7 @@ async function processPrices() {
           basketPrice: baselineBasketPrice,
           prices: baselinePrices,
           formattedDate: '2024 Avg',
-          isComplete: Object.keys(weights).every(c => baselinePrices[c] !== undefined)
+          isComplete: Object.keys(quantities).every(c => baselinePrices[c] !== undefined)
         });
       }
     }
@@ -251,7 +251,7 @@ async function processPrices() {
       });
       
       // Calculate basket price
-      const basketPrice = calculateBasketPrice(dateData, weights);
+      const basketPrice = calculateBasketPrice(dateData, quantities);
       
       if (basketPrice !== null) {
         processedData.basket.push({
@@ -260,7 +260,7 @@ async function processPrices() {
           basketPrice,
           prices: { ...dateData }, // Copy of all commodity prices
           formattedDate: formatDate(adjDate),
-          isComplete: Object.keys(weights).every(c => dateData[c] !== null)
+          isComplete: Object.keys(quantities).every(c => dateData[c] !== null)
         });
       }
     });

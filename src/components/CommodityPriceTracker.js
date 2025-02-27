@@ -15,7 +15,7 @@ const COMMODITY_CONFIG = {
     name: 'Eggs (Dozen)',
     color: '#d97706',      // amber-600
   }
-}
+};
 
 /**
  * Custom tooltip for price charts
@@ -37,41 +37,7 @@ const PriceTooltip = ({ active, payload, label }) => {
       ))}
     </div>
   );
-}
-
-/**
- * Main component: Small multiples view of commodity prices
- */
-function CommodityPriceTracker() {
-  const [priceData, setPriceData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  return (
-    <div>
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
-      {priceData && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.keys(COMMODITY_CONFIG).map(commodity => (
-            <CommodityChart
-              key={commodity}
-              title={COMMODITY_CONFIG[commodity].name}
-              color={COMMODITY_CONFIG[commodity].color}
-              data={priceData[commodity]}
-              latest={priceData[commodity][priceData[commodity].length - 1]}
-            />
-          ))}
-          <BasketChart data={priceData.basket} weights={priceData.weights} />
-        </div>
-      )}
-    </div>
-  );
-}
+};
 
 /**
  * Individual commodity chart component
@@ -121,7 +87,7 @@ function CommodityChart({ title, color, data, latest }) {
               />
               <YAxis 
                 domain={[minPrice, maxPrice]}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${value.toFixed(2)}`}
                 width={45}
                 tick={{ fontSize: 10 }}
               />
@@ -148,7 +114,7 @@ function CommodityChart({ title, color, data, latest }) {
 /**
  * Basket chart component
  */
-function BasketChart({ data, weights }) {
+function BasketChart({ data, quantities }) {
   if (!data || data.length === 0) return null;
   
   const latest = data[data.length - 1];
@@ -165,8 +131,8 @@ function BasketChart({ data, weights }) {
           <div className="flex items-center">
             <span className="text-xl">Weekly Grocery Basket</span>
             <span className="text-sm text-gray-500 ml-2">
-              ({Object.entries(weights).map(([name, qty], index) => 
-                `${index > 0 ? ', ' : ''}${qty} ${COMMODITY_CONFIG[name]?.name?.toLowerCase() || name}`
+              ({Object.entries(quantities).map(([name, qty], index) => 
+                `${index > 0 ? ' + ' : ''}${qty} ${COMMODITY_CONFIG[name]?.name?.toLowerCase() || name}`
               )})
             </span>
           </div>
@@ -186,7 +152,7 @@ function BasketChart({ data, weights }) {
         )}
       </CardHeader>
       <CardContent className="pb-4">
-        <div style={{ width: '100%', height: 250 }}>
+        <div style={{ width: '100%', height: 500 }}>
           <ResponsiveContainer>
             <LineChart 
               data={data} 
@@ -198,13 +164,13 @@ function BasketChart({ data, weights }) {
                 angle={-45}
                 textAnchor="end"
                 height={60}
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 12 }}
               />
               <YAxis 
                 domain={[minPrice, maxPrice]}
-                tickFormatter={(value) => `$${value}`}
-                width={45}
-                tick={{ fontSize: 10 }}
+                tickFormatter={(value) => `${value}`}
+                width={50}
+                tick={{ fontSize: 12 }}
               />
               <Tooltip content={PriceTooltip} />
               <ReferenceLine x="2024 Avg" stroke="#666" strokeDasharray="3 3" />
@@ -213,9 +179,9 @@ function BasketChart({ data, weights }) {
                 dataKey="basketPrice"
                 name="Basket Total"
                 stroke="#8884d8"
-                strokeWidth={3}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
+                strokeWidth={4}
+                dot={{ r: 4 }}
+                activeDot={{ r: 6 }}
                 connectNulls={true}
               />
               {Object.keys(COMMODITY_CONFIG).map(commodity => (
@@ -225,10 +191,10 @@ function BasketChart({ data, weights }) {
                   dataKey={`prices.${commodity}`}
                   name={COMMODITY_CONFIG[commodity].name}
                   stroke={COMMODITY_CONFIG[commodity].color}
-                  strokeWidth={1.5}
+                  strokeWidth={2}
                   strokeDasharray="5 5"
                   dot={false}
-                  activeDot={false}
+                  activeDot={{ r: 5 }}
                   connectNulls={true}
                 />
               ))}
@@ -241,37 +207,98 @@ function BasketChart({ data, weights }) {
 }
 
 /**
- * Main component: Small multiples view of commodity prices
+ * Main component that combines the other components
  */
 export default function CommodityPriceTracker() {
   const [priceData, setPriceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-// Fetch price data from API
-const fetchData = async () => {
-  try {
-    setLoading(true);
-    
-    const response = await fetch('/api/combined-prices');
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Fetch price data from API
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      
+      const response = await fetch('/api/prices');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch data');
+      }
+      
+      setPriceData(result.data);
+      setLoading(false);
+      setError(null);
+      
+    } catch (err) {
+      console.error('Error fetching price data:', err);
+      setError(err.message);
+      setLoading(false);
     }
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to fetch data');
-    }
-    
-    setPriceData(result.data);
-    setLoading(false);
-    setError(null);
-    
-  } catch (err) {
-    console.error('Error fetching price data:', err);
-    setError(err.message);
-    setLoading(false);
-  }
-};
+  };
+
+  return (
+    <div className="w-full max-w-6xl mx-auto">
+      {loading && (
+        <div className="text-center py-12">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-e-transparent"></div>
+          <p className="mt-4">Loading price data...</p>
+        </div>
+      )}
+      
+      {error && (
+        <div className="text-red-600 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p>Error loading price data: {error}</p>
+          <button 
+            onClick={fetchData}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
+      )}
+      
+      {!loading && !error && priceData && (
+        <>
+          {/* Basket chart at the top */}
+          <BasketChart 
+            data={priceData.basket} 
+            quantities={priceData.metadata.quantities}
+          />
+          
+          {/* Commodity section header */}
+          <h2 className="text-2xl font-bold text-center mt-16 mb-8">Individual Commodity Prices</h2>
+          
+          {/* Individual commodity charts below */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {Object.keys(priceData.charts).map(commodity => (
+              <CommodityChart 
+                key={commodity}
+                title={COMMODITY_CONFIG[commodity]?.name || commodity}
+                color={COMMODITY_CONFIG[commodity]?.color || '#333'}
+                data={priceData.charts[commodity].data}
+                latest={priceData.charts[commodity].latest}
+              />
+            ))}
+          </div>
+          
+          <div className="mt-8 mb-12 text-center text-sm text-gray-600 max-w-2xl mx-auto">
+            <p className="font-medium">&quot;2024 Avg&quot; represents the annual average price for 2024.</p>
+            <p className="mt-2">Prices are aligned to Fridays for consistent comparison. The basket total is the sum of individual item prices for a basic weekly grocery purchase.</p>
+            <p className="mt-2">Scroll down to see individual commodity price trends.</p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}

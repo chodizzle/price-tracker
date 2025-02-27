@@ -1,11 +1,8 @@
-// src/app/api/combined-prices/route.js
+// src/app/api/prices/route.js
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-/**
- * API route to get combined price data
- */
 export async function GET() {
   try {
     // Path to the combined-prices.json file
