@@ -10,10 +10,10 @@
     "init-prices": "node init-prices.js",
     "init-eggs": "node src/scripts/init-egg-prices.js",
     "init-milk": "node src/scripts/init-milk-prices.js",
-    "init-eia": "node src/scripts/init-eia-prices.js",
+    "init-gasoline": "node src/scripts/init-gasoline-prices.js",
     "update-eggs": "node init-prices.js update-eggs",
     "update-milk": "node init-prices.js update-milk",
-    "update-eia": "node init-prices.js update-eia",
+    "update-gasoline": "node init-prices.js update-gasoline",
     "process-prices": "node src/scripts/process-prices.js"
   },
   "dependencies": {
@@ -24,6 +24,7 @@
     "dotenv": "^16.0.0",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
+    "node-fetch": "^2.7.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",

@@ -34,7 +34,7 @@ const COMMODITY_CONFIG = {
   //   name: 'Natural Gas (Million BTU)',
   //   color: '#4361ee',      // blue
   //   category: 'energy'
-  }
+  // }
 };
 
 /**

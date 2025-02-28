@@ -101,16 +101,14 @@ async function processPrices() {
     console.log('Loaded raw price data with commodities:', Object.keys(rawData));
     
     // Define commodity quantities for basket
-  const quantities = {
-    // USDA agricultural commodities
-    eggs: 1,   // 1 dozen per week
-    milk: 1,   // 1 gallon per week
-    
-    // EIA energy commodities
-    // wti_crude: 0.1,          // 0.1 barrels per week (~4.2 gallons)
-    gasoline_regular: 1    // 1 gallon per week
-    // natural_gas: 1           // 1 Million BTU per week
-  };
+    const quantities = {
+      // USDA agricultural commodities
+      eggs: 1,   // 1 dozen per week
+      milk: 1,   // 1 gallon per week
+      
+      // EIA energy commodities
+      gasoline_regular: 1    // 1 gallon per week
+    };
   
     
     // Create processed data structure
