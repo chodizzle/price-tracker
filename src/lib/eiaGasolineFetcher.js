@@ -20,10 +20,11 @@ class EIAGasolineFetcher {
       // Series ID for regular gasoline
       const seriesId = 'PET.EMM_EPMR_PTE_NUS_DPG.W'; // Weekly U.S. Regular Gasoline Prices (Dollars per Gallon)
       
-      // Build URL with the correct format
-      const url = new URL('https://api.eia.gov/v2/seriesid/' + seriesId + '/data/');
+      // Build URL with the correct format - conform to EIA API v2 specifications
+      const url = new URL(`https://api.eia.gov/v2/seriesid/${seriesId}/data/`);
       url.searchParams.append('api_key', this.apiKey);
       url.searchParams.append('frequency', 'weekly');
+      url.searchParams.append('data[0]', 'value'); // Specifically request the 'value' field
       url.searchParams.append('start', startDate);
       url.searchParams.append('end', endDate);
       url.searchParams.append('sort[0][column]', 'period');
@@ -60,6 +61,7 @@ class EIAGasolineFetcher {
             const parsedData = JSON.parse(rawData);
             
             if (!parsedData.response || !parsedData.response.data) {
+              console.error('Invalid EIA API response format:', JSON.stringify(parsedData).substring(0, 500) + '...');
               throw new Error('Invalid EIA API response format');
             }
             
@@ -81,6 +83,10 @@ class EIAGasolineFetcher {
             
           } catch (e) {
             console.error('Error parsing EIA API response:', e.message);
+            // Log part of the raw response to diagnose the issue
+            if (rawData) {
+              console.error('First 300 characters of response:', rawData.substring(0, 300));
+            }
             reject(new Error(`Error parsing EIA API response: ${e.message}`));
           }
         });

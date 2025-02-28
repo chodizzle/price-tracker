@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { priceDataManager } = require('../lib/priceDataManager');
 const EIAApiClient = require('../lib/eiaApiClient');
-const { EIA_SERIES, EIA_COMMODITY_NAMES } = require('../lib/eiaConstants');
+const { EIA_SERIES, EIA_COMMODITY_NAMES, EIA_API_MAPPING } = require('../lib/eiaConstants');
 
 // Load environment variables
 require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
@@ -106,6 +106,8 @@ async function initializeCommodityData(commodityKey, seriesId) {
     const startDate = '2024-01-01';
     const endDate = currentDate.toISOString().split('T')[0];
     
+    console.log(`Fetching ${commodityKey} prices from ${startDate} to ${endDate}...`);
+    
     // Fetch price data
     const prices = await eiaClient.fetchCommodityData(seriesId, startDate, endDate);
     console.log(`Fetched ${prices.length} price records for ${commodityKey}`);
@@ -118,12 +120,23 @@ async function initializeCommodityData(commodityKey, seriesId) {
       return { prices: [], baseline: null };
     }
     
+    // Filter to ensure only 2024 onwards prices
+    const prices2024onwards = prices.filter(p => {
+      const year = parseInt(p.date.split('-')[0]);
+      return year >= 2024;
+    });
+    
+    console.log(`Filtered to ${prices2024onwards.length} prices from 2024 onwards`);
+    
     // Calculate baseline statistics
-    const baseline = calculateBaseline(prices);
+    const baseline = calculateBaseline(prices2024onwards);
     console.log(`${commodityKey} baseline stats:`, baseline);
     
     // Add to price data manager
     const commodityId = commodityKey.toLowerCase();
+    
+    // Get the API series mapping if available
+    const apiMapping = EIA_API_MAPPING[seriesId] || {};
     
     if (!priceDataManager.data[commodityId]) {
       priceDataManager.data[commodityId] = {
@@ -135,6 +148,7 @@ async function initializeCommodityData(commodityKey, seriesId) {
           },
           name: EIA_COMMODITY_NAMES[commodityKey],
           seriesId,
+          series: apiMapping.facetSeries || seriesId.split('.')[1],
           baseline: { 2024: baseline }
         },
         prices: []
@@ -149,6 +163,7 @@ async function initializeCommodityData(commodityKey, seriesId) {
       };
       priceDataManager.data[commodityId].metadata.name = EIA_COMMODITY_NAMES[commodityKey];
       priceDataManager.data[commodityId].metadata.seriesId = seriesId;
+      priceDataManager.data[commodityId].metadata.series = apiMapping.facetSeries || seriesId.split('.')[1];
       priceDataManager.data[commodityId].metadata.baseline = {
         ...priceDataManager.data[commodityId].metadata.baseline,
         2024: baseline
@@ -156,10 +171,10 @@ async function initializeCommodityData(commodityKey, seriesId) {
     }
     
     // Add prices
-    priceDataManager.addPriceData(commodityId, prices);
+    priceDataManager.addPriceData(commodityId, prices2024onwards);
     
     console.log(`Successfully initialized ${commodityKey} price data`);
-    return { baseline, prices };
+    return { baseline, prices: prices2024onwards };
   } catch (error) {
     console.error(`Error initializing ${commodityKey} prices:`, error);
     throw error;

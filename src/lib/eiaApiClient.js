@@ -19,10 +19,11 @@ class EIAApiClient {
    */
   async fetchCommodityData(seriesId, startDate, endDate) {
     try {
+      // Construct URL according to EIA API v2 specifications
       const url = new URL(`${this.baseUrl}/seriesid/${seriesId}/data/`);
       url.searchParams.append('api_key', this.apiKey);
       url.searchParams.append('frequency', 'weekly');
-      url.searchParams.append('data[0]', 'value');
+      url.searchParams.append('data[0]', 'value'); // Specifically requesting the value field
       url.searchParams.append('start', startDate);
       url.searchParams.append('end', endDate);
       url.searchParams.append('sort[0][column]', 'period');
@@ -33,11 +34,16 @@ class EIAApiClient {
       const response = await fetch(url.toString());
       
       if (!response.ok) {
+        // Get more details about the error
+        const errorText = await response.text();
+        console.error('EIA API error response:', errorText);
         throw new Error(`EIA API error: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log(`Received EIA API data structure: ${Object.keys(data).join(', ')}`);
       
+      // Process the response
       return this.processEIAResponse(data, seriesId);
     } catch (error) {
       console.error(`Error fetching EIA data for ${seriesId}:`, error);
@@ -54,7 +60,16 @@ class EIAApiClient {
   processEIAResponse(responseData, seriesId) {
     try {
       if (!responseData.response || !responseData.response.data) {
+        console.error('Invalid EIA API response format:', 
+                      JSON.stringify(responseData).substring(0, 500) + '...');
         throw new Error('Invalid EIA API response format');
+      }
+
+      console.log(`Processing ${responseData.response.data.length} EIA data points`);
+      
+      // Sample the first data point to understand structure
+      if (responseData.response.data.length > 0) {
+        console.log('Sample data point:', JSON.stringify(responseData.response.data[0]));
       }
 
       const prices = responseData.response.data.map(item => ({
@@ -86,6 +101,8 @@ class EIAApiClient {
       const response = await fetch(url.toString());
       
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('EIA API info error response:', errorText);
         throw new Error(`EIA API error: ${response.status} ${response.statusText}`);
       }
       

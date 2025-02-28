@@ -23,6 +23,27 @@ const EIA_SERIES = {
   };
   
   /**
+   * Mapping EIA Series IDs to their API endpoints and facet values
+   */
+  const EIA_API_MAPPING = {
+    // Petroleum prices - regular gasoline
+    'PET.EMM_EPMR_PTE_NUS_DPG.W': {
+      endpoint: 'petroleum/pri/gnd/data',
+      facetSeries: 'EMM_EPMR_PTE_NUS_DPG'
+    },
+    // WTI Crude oil
+    'PET.RWTC.W': {
+      endpoint: 'petroleum/pri/spt/data',
+      facetSeries: 'RWTC'
+    },
+    // Natural gas
+    'NG.RNGWHHD.W': {
+      endpoint: 'natural-gas/pri/sum/data',
+      facetSeries: 'RNGWHHD'
+    }
+  };
+  
+  /**
    * Display names for EIA commodities
    */
   const EIA_COMMODITY_NAMES = {
@@ -54,6 +75,7 @@ const EIA_SERIES = {
   
   module.exports = {
     EIA_SERIES,
+    EIA_API_MAPPING,
     EIA_COMMODITY_NAMES,
     EIA_COMMODITY_COLORS
   };

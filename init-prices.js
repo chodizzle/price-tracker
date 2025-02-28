@@ -6,6 +6,7 @@ require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 const { initializeEggPrices } = require('./src/scripts/init-egg-prices');
 const { initializeMilkPrices } = require('./src/scripts/init-milk-prices');
 const { initializeGasolinePrices } = require('./src/scripts/init-gasoline-prices');
+const { initializeEIAPrices } = require('./src/scripts/init-eia-prices');
 const { priceDataManager } = require('./src/lib/priceDataManager');
 const { processPrices } = require('./src/scripts/process-prices');
 
@@ -29,8 +30,14 @@ async function initializeAll() {
     console.log(`Initialized ${milkResult?.prices?.length || 0} milk price records`);
     console.log('Milk prices baseline:', milkResult?.baseline);
     
-    // Then initialize EIA energy prices
-    console.log('\n--- INITIALIZING EIA ENERGY PRICES ---');
+    // Then initialize gasoline prices
+    console.log('\n--- INITIALIZING GASOLINE PRICES ---');
+    const gasolineResult = await initializeGasolinePrices();
+    console.log(`Initialized ${gasolineResult?.prices?.length || 0} gasoline price records`);
+    console.log('Gasoline prices baseline:', gasolineResult?.baseline);
+    
+    // Then initialize other EIA energy prices
+    console.log('\n--- INITIALIZING OTHER EIA ENERGY PRICES ---');
     const eiaResult = await initializeEIAPrices();
     console.log('EIA prices initialized for commodities:', Object.keys(eiaResult || {}).join(', '));
     
@@ -57,9 +64,16 @@ async function initializeAll() {
           last: priceDataManager.data.milk?.prices[priceDataManager.data.milk?.prices?.length - 1]?.date
         }
       },
+      gasoline_regular: {
+        count: priceDataManager.data.gasoline_regular?.prices?.length || 0,
+        dateRange: {
+          first: priceDataManager.data.gasoline_regular?.prices[0]?.date,
+          last: priceDataManager.data.gasoline_regular?.prices[priceDataManager.data.gasoline_regular?.prices?.length - 1]?.date
+        }
+      },
       energy: {
         commodities: Object.keys(priceDataManager.data).filter(key => 
-          !['eggs', 'milk'].includes(key) && priceDataManager.data[key]?.prices?.length > 0
+          !['eggs', 'milk', 'gasoline_regular'].includes(key) && priceDataManager.data[key]?.prices?.length > 0
         )
       },
       processed: {
@@ -94,6 +108,15 @@ if (updateArg === 'update-milk') {
     .then(() => console.log('Egg prices update complete!'))
     .catch(error => {
       console.error('Failed to update egg prices:', error);
+      process.exit(1);
+    });
+} else if (updateArg === 'update-gasoline') {
+  console.log('Updating only gasoline prices...');
+  initializeGasolinePrices()
+    .then(() => processPrices())
+    .then(() => console.log('Gasoline prices update complete!'))
+    .catch(error => {
+      console.error('Failed to update gasoline prices:', error);
       process.exit(1);
     });
 } else if (updateArg === 'update-eia') {
