@@ -17,23 +17,30 @@ class EIAGasolineFetcher {
    */
   fetchGasolinePrices(startDate, endDate) {
     return new Promise((resolve, reject) => {
-      // Series ID for regular gasoline
-      const seriesId = 'PET.EMM_EPMR_PTE_NUS_DPG.W'; // Weekly U.S. Regular Gasoline Prices (Dollars per Gallon)
-      
-      // Build URL with the correct format - conform to EIA API v2 specifications
-      const url = new URL(`https://api.eia.gov/v2/seriesid/${seriesId}/data/`);
+      // Following the approach from test-gasoline-api.js that works
+      const url = new URL('https://api.eia.gov/v2/petroleum/pri/gnd/data/');
       url.searchParams.append('api_key', this.apiKey);
       url.searchParams.append('frequency', 'weekly');
-      url.searchParams.append('data[0]', 'value'); // Specifically request the 'value' field
-      url.searchParams.append('start', startDate);
-      url.searchParams.append('end', endDate);
+      url.searchParams.append('data[0]', 'value');
+      url.searchParams.append('facets[series][]', 'EMM_EPMR_PTE_NUS_DPG');
       url.searchParams.append('sort[0][column]', 'period');
       url.searchParams.append('sort[0][direction]', 'asc');
+      url.searchParams.append('start', startDate);
+      url.searchParams.append('end', endDate);
+      url.searchParams.append('offset', '0');
+      url.searchParams.append('length', '5000');
 
       console.log(`Fetching gasoline prices from: ${url.toString()}`);
       
+      // Set up headers
+      const options = {
+        headers: {
+          'Accept': 'application/json'
+        }
+      };
+      
       // Make request
-      https.get(url, (res) => {
+      https.get(url, options, (res) => {
         const { statusCode } = res;
         let error;
         
@@ -72,7 +79,7 @@ class EIAGasolineFetcher {
               minPrice: parseFloat(item.value) * 0.95, // Estimate min as 5% below average
               maxPrice: parseFloat(item.value) * 1.05, // Estimate max as 5% above average
               source: 'eia',
-              seriesId
+              series: 'EMM_EPMR_PTE_NUS_DPG'
             }));
             
             // Sort by date

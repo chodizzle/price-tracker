@@ -20,21 +20,11 @@ const COMMODITY_CONFIG = {
   },
   
   // EIA energy commodities
-  // wti_crude: { 
-  //   name: 'WTI Crude Oil (Barrel)',
-  //   color: '#2a9d8f',      // teal
-  //   category: 'energy'
-  // },
   gasoline_regular: { 
     name: 'Regular Gasoline (Gallon)',
     color: '#e63946',      // red
     category: 'energy'
   }
-  // , natural_gas: { 
-  //   name: 'Natural Gas (Million BTU)',
-  //   color: '#4361ee',      // blue
-  //   category: 'energy'
-  // }
 };
 
 /**
@@ -43,18 +33,38 @@ const COMMODITY_CONFIG = {
 const PriceTooltip = ({ active, payload, label }) => {
   if (!active || !payload || payload.length === 0) return null;
   
+  // Find the basketPrice if available
+  const basketData = payload.find(entry => entry.dataKey === 'basketPrice');
+  
   return (
     <div className="bg-white p-3 border rounded shadow-lg">
       <p className="font-semibold">{label}</p>
-      {payload.map((entry, index) => (
-        <p 
-          key={index} 
-          style={{ color: entry.color }}
-          className="font-medium"
-        >
-          {entry.name}: ${Number(entry.value).toFixed(2)}
+      {basketData && (
+        <p className="font-medium text-purple-700 border-b pb-1 mb-1">
+          Basket Total: ${Number(basketData.value).toFixed(2)}
         </p>
-      ))}
+      )}
+      {payload.map((entry, index) => {
+        // Skip the basket total in the detailed breakdown
+        if (entry.dataKey === 'basketPrice') return null;
+        
+        // Extract commodity name from the dataKey (e.g., prices.eggs → eggs)
+        const commodityKey = entry.dataKey.split('.')[1];
+        if (!commodityKey) return null;
+        
+        const config = COMMODITY_CONFIG[commodityKey];
+        if (!config) return null;
+        
+        return (
+          <p 
+            key={index} 
+            style={{ color: config.color }}
+            className="font-medium"
+          >
+            {config.name}: ${Number(entry.value).toFixed(2)}
+          </p>
+        );
+      })}
     </div>
   );
 };
@@ -172,7 +182,7 @@ function BasketChart({ data, quantities }) {
         )}
       </CardHeader>
       <CardContent className="pb-4">
-        <div style={{ width: '100%', height: 500 }}>
+        <div style={{ width: '100%', height: 400 }}>
           <ResponsiveContainer>
             <LineChart 
               data={data} 
@@ -204,20 +214,21 @@ function BasketChart({ data, quantities }) {
                 activeDot={{ r: 6 }}
                 connectNulls={true}
               />
-              {/* {Object.keys(COMMODITY_CONFIG).map(commodity => (
+              {Object.keys(COMMODITY_CONFIG).map(commodity => (
                 <Line
                   key={commodity}
                   type="monotone"
                   dataKey={`prices.${commodity}`}
                   name={COMMODITY_CONFIG[commodity].name}
-                  stroke={COMMODITY_CONFIG[commodity].color}
+                  // stroke={COMMODITY_CONFIG[commodity].color}
+                  stroke="rgba(255, 255, 255, 0)"
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   dot={false}
                   activeDot={{ r: 5 }}
                   connectNulls={true}
                 />
-              ))} */}
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -233,11 +244,62 @@ export default function CommodityPriceTracker() {
   const [priceData, setPriceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filteredData, setFilteredData] = useState(null);
 
   // Fetch data on component mount
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Process data to ensure all commodities are present in latest data point
+  useEffect(() => {
+    if (priceData) {
+      // Find data points where all required commodities have data
+      const requiredCommodities = ['eggs', 'milk', 'gasoline_regular'];
+      
+      // Filter the basket data to only include complete data points
+      const filteredBasket = priceData.basket.filter(item => {
+        // Keep the 2024 Avg data point regardless
+        if (item.adjDate === '2024 Avg') return true;
+        
+        // Check if all required commodities have data
+        return requiredCommodities.every(commodity => 
+          item.prices[commodity] !== undefined && 
+          item.prices[commodity] !== null
+        );
+      });
+      
+      // Only use data up to the most recent complete data point
+      const lastCompleteIndex = filteredBasket.length - 1;
+      
+      // Filter the individual commodity data to match the filtered basket date range
+      const filterDate = lastCompleteIndex >= 0 ? filteredBasket[lastCompleteIndex].adjDate : null;
+      
+      const filteredCharts = {};
+      Object.keys(priceData.charts).forEach(commodity => {
+        // Include all data points up to the latest complete date
+        filteredCharts[commodity] = {
+          ...priceData.charts[commodity],
+          data: priceData.charts[commodity].data.filter(item => {
+            // Keep the 2024 Avg data point
+            if (item.adjDate === '2024 Avg') return true;
+            // Keep data points up to the latest complete date
+            return filterDate ? new Date(item.adjDate) <= new Date(filterDate) : false;
+          }),
+          // Update latest to reflect the filtered data
+          latest: priceData.charts[commodity].data.find(item => 
+            filterDate && item.adjDate === filterDate) || 
+            priceData.charts[commodity].latest
+        };
+      });
+      
+      setFilteredData({
+        ...priceData,
+        basket: filteredBasket,
+        charts: filteredCharts
+      });
+    }
+  }, [priceData]);
 
   // Fetch price data from API
   const fetchData = async () => {
@@ -267,6 +329,9 @@ export default function CommodityPriceTracker() {
     }
   };
 
+  // Use filtered data if available, otherwise use the original data
+  const displayData = filteredData || priceData;
+
   return (
     <div className="w-full max-w-6xl mx-auto">
       {loading && (
@@ -288,12 +353,12 @@ export default function CommodityPriceTracker() {
         </div>
       )}
       
-      {!loading && !error && priceData && (
+      {!loading && !error && displayData && (
         <>
           {/* Basket chart at the top */}
           <BasketChart 
-            data={priceData.basket} 
-            quantities={priceData.metadata.quantities}
+            data={displayData.basket} 
+            quantities={displayData.metadata.quantities}
           />
           
           <div className="mt-8 mb-12 text-center text-sm text-gray-600 max-w-2xl mx-auto">
@@ -307,13 +372,13 @@ export default function CommodityPriceTracker() {
           
           {/* Individual commodity charts below */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {Object.keys(priceData.charts).map(commodity => (
+            {Object.keys(displayData.charts).map(commodity => (
               <CommodityChart 
                 key={commodity}
                 title={COMMODITY_CONFIG[commodity]?.name || commodity}
                 color={COMMODITY_CONFIG[commodity]?.color || '#333'}
-                data={priceData.charts[commodity].data}
-                latest={priceData.charts[commodity].latest}
+                data={displayData.charts[commodity].data}
+                latest={displayData.charts[commodity].latest}
               />
             ))}
           </div>

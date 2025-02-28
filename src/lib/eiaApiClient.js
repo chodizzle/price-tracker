@@ -1,5 +1,6 @@
 // src/lib/eiaApiClient.js
 const fetch = require('node-fetch');
+const { EIA_API_MAPPING } = require('./eiaConstants');
 
 /**
  * Client for interacting with the EIA API to fetch energy commodity prices
@@ -19,19 +20,41 @@ class EIAApiClient {
    */
   async fetchCommodityData(seriesId, startDate, endDate) {
     try {
-      // Construct URL according to EIA API v2 specifications
-      const url = new URL(`${this.baseUrl}/seriesid/${seriesId}/data/`);
+      // Get the API mapping for this series
+      const apiInfo = EIA_API_MAPPING[seriesId] || {
+        endpoint: 'seriesid',
+        facetSeries: seriesId.split('.')[1]
+      };
+      
+      let url;
+      
+      // If we have a specific endpoint to use
+      if (apiInfo.endpoint.includes('petroleum') || apiInfo.endpoint.includes('natural-gas')) {
+        url = new URL(`${this.baseUrl}/${apiInfo.endpoint}/`);
+        url.searchParams.append('facets[series][]', apiInfo.facetSeries);
+      } else {
+        // Default to seriesid endpoint
+        url = new URL(`${this.baseUrl}/seriesid/${seriesId}/data/`);
+      }
+      
+      // Add common parameters
       url.searchParams.append('api_key', this.apiKey);
       url.searchParams.append('frequency', 'weekly');
-      url.searchParams.append('data[0]', 'value'); // Specifically requesting the value field
+      url.searchParams.append('data[0]', 'value');
       url.searchParams.append('start', startDate);
       url.searchParams.append('end', endDate);
       url.searchParams.append('sort[0][column]', 'period');
       url.searchParams.append('sort[0][direction]', 'asc');
+      url.searchParams.append('offset', '0');
+      url.searchParams.append('length', '5000');
 
       console.log(`Fetching EIA data from: ${url.toString()}`);
       
-      const response = await fetch(url.toString());
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
       
       if (!response.ok) {
         // Get more details about the error

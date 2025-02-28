@@ -111,7 +111,7 @@ async function processPrices() {
     };
   
     
-    // Create processed data structure
+    // Create processed data structure - Make sure charts is initialized here
     const processedData = {
       metadata: {
         lastProcessed: new Date().toISOString(),
@@ -119,7 +119,8 @@ async function processPrices() {
         commodities: {}
       },
       alignedPrices: [],
-      basket: []
+      basket: [],
+      charts: {}  // Initialize charts object here
     };
     
     // Track all unique adjusted dates
@@ -309,6 +310,7 @@ async function processPrices() {
       // Get display name from metadata if available
       const displayName = rawData[commodity]?.metadata?.name || commodityId;
       
+      // Initialize the chart data for this commodity
       processedData.charts[commodityId] = {
         data: processedData.alignedPrices
           .filter(p => p.commodity === commodityId)
@@ -323,9 +325,9 @@ async function processPrices() {
       };
       
       // Calculate change percentages
-      processedData.charts[commodity].data.forEach((item, index) => {
+      processedData.charts[commodityId].data.forEach((item, index) => {
         if (index > 0 && item.adjDate !== '2024 Avg') {
-          const prev = processedData.charts[commodity].data[index - 1];
+          const prev = processedData.charts[commodityId].data[index - 1];
           if (prev.adjDate !== '2024 Avg') {
             item.change = {
               amount: item.price - prev.price,
@@ -336,13 +338,13 @@ async function processPrices() {
       });
       
       // Get latest price
-      const latestPoint = processedData.charts[commodity].data[processedData.charts[commodity].data.length - 1];
-      processedData.charts[commodity].latest = latestPoint;
+      const latestPoint = processedData.charts[commodityId].data[processedData.charts[commodityId].data.length - 1];
+      processedData.charts[commodityId].latest = latestPoint;
       
       // Get comparison to 2024 average
-      const baselinePoint = processedData.charts[commodity].data.find(p => p.adjDate === '2024 Avg');
+      const baselinePoint = processedData.charts[commodityId].data.find(p => p.adjDate === '2024 Avg');
       if (baselinePoint && latestPoint) {
-        processedData.charts[commodity].vsBaseline = {
+        processedData.charts[commodityId].vsBaseline = {
           amount: latestPoint.price - baselinePoint.price,
           percent: ((latestPoint.price - baselinePoint.price) / baselinePoint.price) * 100
         };

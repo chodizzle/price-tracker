@@ -20,33 +20,48 @@ const EIA_SERIES = {
     
     // Electricity prices
     ELECTRICITY_RESIDENTIAL: 'ELEC.PRICE.US-RES.M', // Monthly U.S. Residential Electricity Price (Cents per Kilowatthour)
-  };
+};
   
-  /**
-   * Mapping EIA Series IDs to their API endpoints and facet values
-   */
-  const EIA_API_MAPPING = {
+/**
+ * Mapping EIA Series IDs to their API endpoints and facet values
+ */
+const EIA_API_MAPPING = {
     // Petroleum prices - regular gasoline
     'PET.EMM_EPMR_PTE_NUS_DPG.W': {
-      endpoint: 'petroleum/pri/gnd/data',
-      facetSeries: 'EMM_EPMR_PTE_NUS_DPG'
+        endpoint: 'petroleum/pri/gnd/data',
+        facetSeries: 'EMM_EPMR_PTE_NUS_DPG'
+    },
+    // Premium gasoline
+    'PET.EMM_EPMP_PTE_NUS_DPG.W': {
+        endpoint: 'petroleum/pri/gnd/data',
+        facetSeries: 'EMM_EPMP_PTE_NUS_DPG'
+    },
+    // Diesel
+    'PET.EMD_EPD2D_PTE_NUS_DPG.W': {
+        endpoint: 'petroleum/pri/gnd/data',
+        facetSeries: 'EMD_EPD2D_PTE_NUS_DPG'
     },
     // WTI Crude oil
     'PET.RWTC.W': {
-      endpoint: 'petroleum/pri/spt/data',
-      facetSeries: 'RWTC'
+        endpoint: 'petroleum/pri/spt/data',
+        facetSeries: 'RWTC'
+    },
+    // Brent Crude oil
+    'PET.RBRTE.W': {
+        endpoint: 'petroleum/pri/spt/data',
+        facetSeries: 'RBRTE'
     },
     // Natural gas
     'NG.RNGWHHD.W': {
-      endpoint: 'natural-gas/pri/sum/data',
-      facetSeries: 'RNGWHHD'
+        endpoint: 'natural-gas/pri/sum/data',
+        facetSeries: 'RNGWHHD'
     }
-  };
+};
   
-  /**
-   * Display names for EIA commodities
-   */
-  const EIA_COMMODITY_NAMES = {
+/**
+ * Display names for EIA commodities
+ */
+const EIA_COMMODITY_NAMES = {
     GASOLINE_REGULAR: 'Regular Gasoline (Gallon)',
     GASOLINE_PREMIUM: 'Premium Gasoline (Gallon)',
     DIESEL: 'Diesel (Gallon)',
@@ -56,12 +71,12 @@ const EIA_SERIES = {
     BRENT_CRUDE: 'Brent Crude Oil (Barrel)',
     NATURAL_GAS: 'Natural Gas (Million Btu)',
     ELECTRICITY_RESIDENTIAL: 'Residential Electricity (kWh)',
-  };
+};
   
-  /**
-   * Display colors for EIA commodities
-   */
-  const EIA_COMMODITY_COLORS = {
+/**
+ * Display colors for EIA commodities
+ */
+const EIA_COMMODITY_COLORS = {
     GASOLINE_REGULAR: '#e63946', // red
     GASOLINE_PREMIUM: '#d62828', // darker red
     DIESEL: '#023e8a', // dark blue
@@ -71,11 +86,11 @@ const EIA_SERIES = {
     BRENT_CRUDE: '#168aad', // blue
     NATURAL_GAS: '#4361ee', // bright blue
     ELECTRICITY_RESIDENTIAL: '#7209b7', // purple
-  };
+};
   
-  module.exports = {
+module.exports = {
     EIA_SERIES,
     EIA_API_MAPPING,
     EIA_COMMODITY_NAMES,
     EIA_COMMODITY_COLORS
-  };
+};
