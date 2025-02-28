@@ -303,12 +303,17 @@ async function processPrices() {
       return a.commodity.localeCompare(b.commodity);
     });
     
-    // Create commodity-specific charts data
-    processedData.charts = {};
+    // Ensure proper commodity names are used in the charts:
     Object.keys(rawData).forEach(commodity => {
-      processedData.charts[commodity] = {
+      // Convert commodity keys to lowercase for consistency
+      const commodityId = commodity.toLowerCase();
+      
+      // Get display name from metadata if available
+      const displayName = rawData[commodity]?.metadata?.name || commodityId;
+      
+      processedData.charts[commodityId] = {
         data: processedData.alignedPrices
-          .filter(p => p.commodity === commodity)
+          .filter(p => p.commodity === commodityId)
           .map(p => ({
             date: p.date,
             adjDate: p.adjDate,

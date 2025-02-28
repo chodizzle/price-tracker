@@ -29,6 +29,11 @@ async function initializeAll() {
     console.log(`Initialized ${milkResult?.prices?.length || 0} milk price records`);
     console.log('Milk prices baseline:', milkResult?.baseline);
     
+    // Then initialize EIA energy prices
+    console.log('\n--- INITIALIZING EIA ENERGY PRICES ---');
+    const eiaResult = await initializeEIAPrices();
+    console.log('EIA prices initialized for commodities:', Object.keys(eiaResult || {}).join(', '));
+    
     // Process the combined data
     console.log('\n--- PROCESSING COMBINED DATA ---');
     const processedData = await processPrices();
@@ -52,6 +57,11 @@ async function initializeAll() {
           last: priceDataManager.data.milk?.prices[priceDataManager.data.milk?.prices?.length - 1]?.date
         }
       },
+      energy: {
+        commodities: Object.keys(priceDataManager.data).filter(key => 
+          !['eggs', 'milk'].includes(key) && priceDataManager.data[key]?.prices?.length > 0
+        )
+      },
       processed: {
         alignedPrices: processedData.alignedPrices.length,
         basketPoints: processedData.basket.length
@@ -59,9 +69,10 @@ async function initializeAll() {
     });
     
     console.log('Data successfully initialized!');
+    return processedData;
   } catch (error) {
     console.error('Initialization failed:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
@@ -83,6 +94,15 @@ if (updateArg === 'update-milk') {
     .then(() => console.log('Egg prices update complete!'))
     .catch(error => {
       console.error('Failed to update egg prices:', error);
+      process.exit(1);
+    });
+} else if (updateArg === 'update-eia') {
+  console.log('Updating only EIA energy prices...');
+  initializeEIAPrices()
+    .then(() => processPrices())
+    .then(() => console.log('EIA energy prices update complete!'))
+    .catch(error => {
+      console.error('Failed to update EIA energy prices:', error);
       process.exit(1);
     });
 } else {
