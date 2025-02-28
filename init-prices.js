@@ -5,6 +5,7 @@ require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 // Import initialization functions - correct paths based on directory structure
 const { initializeEggPrices } = require('./src/scripts/init-egg-prices');
 const { initializeMilkPrices } = require('./src/scripts/init-milk-prices');
+const { initializeEIAPrices } = require('./src/scripts/init-eia-prices');
 const { priceDataManager } = require('./src/lib/priceDataManager');
 const { processPrices } = require('./src/scripts/process-prices');
 

@@ -7,13 +7,33 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 
 // Commodity display names and colors
 const COMMODITY_CONFIG = {
+  // USDA agricultural commodities
   milk: { 
     name: 'Milk (Gallon)',
     color: '#2563eb',      // blue-600
+    category: 'agricultural'
   },
   eggs: { 
     name: 'Eggs (Dozen)',
     color: '#d97706',      // amber-600
+    category: 'agricultural'
+  },
+  
+  // EIA energy commodities
+  // wti_crude: { 
+  //   name: 'WTI Crude Oil (Barrel)',
+  //   color: '#2a9d8f',      // teal
+  //   category: 'energy'
+  // },
+  gasoline_regular: { 
+    name: 'Regular Gasoline (Gallon)',
+    color: '#e63946',      // red
+    category: 'energy'
+  }
+  // , natural_gas: { 
+  //   name: 'Natural Gas (Million BTU)',
+  //   color: '#4361ee',      // blue
+  //   category: 'energy'
   }
 };
 

@@ -1,6 +1,6 @@
 # Commodity Price Tracker
 
-A web application that displays price trends for common commodities (milk and eggs) using data from the USDA API.
+A web application that displays price trends for various commodities using data from the USDA and EIA APIs. The application tracks both agricultural products (milk and eggs) and energy commodities (crude oil, gasoline, and natural gas).
 
 ## Setup Instructions
 
