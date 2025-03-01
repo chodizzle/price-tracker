@@ -3,12 +3,12 @@ const path = require('path');
 require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 
 // Import initialization functions - correct paths based on directory structure
-const { initializeEggPrices } = require('./src/scripts/init-egg-prices');
-const { initializeMilkPrices } = require('./src/scripts/init-milk-prices');
-const { initializeGasolinePrices } = require('./src/scripts/init-gasoline-prices');
-const { initializeEIAPrices } = require('./src/scripts/init-eia-prices');
-const { getPriceDataManager } = require('./src/lib/priceDataManager');
-const { processPrices } = require('./src/scripts/process-prices');
+const { initializeEggPrices } = require('./init-egg-prices');
+const { initializeMilkPrices } = require('./init-milk-prices');
+const { initializeGasolinePrices } = require('./init-gasoline-prices');
+const { initializeEIAPrices } = require('./init-eia-prices');
+const { getPriceDataManager } = require('../lib/priceDataManager');
+const { processPrices } = require('./process-prices');
 
 /**
  * Main initialization function
@@ -99,7 +99,7 @@ async function initializeAll() {
 }
 
 // Import the storage module
-const storage = require('./src/lib/storage');
+const storage = require('../lib/storage');
 
 // Check if we should update just one commodity
 const updateArg = process.argv[2];

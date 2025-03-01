@@ -11,7 +11,7 @@ export async function GET(request) {
     const isManualInit = authHeader && authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
     // Import initialization functions dynamically to avoid bundling issues
-    const { initializeAll } = await import('../../../../../init-prices.js');
+    const { initializeAll } = await import('../../../../scripts/init-prices.js');
     
     console.log('Starting price data initialization...');
     const result = await initializeAll();

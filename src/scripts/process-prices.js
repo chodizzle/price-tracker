@@ -1,48 +1,51 @@
 // src/scripts/process-prices.js
 const storage = require('../lib/storage');
+const { getNearestFriday, isFriday } = require('../lib/utils');
+// import { getNearestFriday, isFriday } from '@/lib/utils';
 
-/**
- * Gets the nearest Friday for a date, preferring the current Friday if it is one,
- * otherwise using the previous Friday. Never crosses year boundaries.
- * @param {string} dateStr - Date in YYYY-MM-DD format
- * @returns {string} Nearest Friday in YYYY-MM-DD format
- */
-function getNearestFriday(dateStr) {
-  // Special case for 2024 Avg
-  if (dateStr === '2024 Avg') return dateStr;
+
+// /**
+//  * Gets the nearest Friday for a date, preferring the current Friday if it is one,
+//  * otherwise using the previous Friday. Never crosses year boundaries.
+//  * @param {string} dateStr - Date in YYYY-MM-DD format
+//  * @returns {string} Nearest Friday in YYYY-MM-DD format
+//  */
+// function getNearestFriday(dateStr) {
+//   // Special case for 2024 Avg
+//   if (dateStr === '2024 Avg') return dateStr;
   
-  // Parse the date, using noon UTC to avoid timezone issues
-  const date = new Date(dateStr + 'T12:00:00Z');
-  const originalYear = date.getUTCFullYear();
+//   // Parse the date, using noon UTC to avoid timezone issues
+//   const date = new Date(dateStr + 'T12:00:00Z');
+//   const originalYear = date.getUTCFullYear();
   
-  // If already a Friday, return as is
-  if (date.getUTCDay() === 5) {
-    return dateStr;
-  }
+//   // If already a Friday, return as is
+//   if (date.getUTCDay() === 5) {
+//     return dateStr;
+//   }
   
-  // Calculate days to go back to previous Friday
-  let daysToSubtract = date.getUTCDay();
-  if (daysToSubtract < 5) {
-    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
-    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
-  } else {
-    // For day 6 (Saturday), go back 1 day
-    daysToSubtract = 1;
-  }
+//   // Calculate days to go back to previous Friday
+//   let daysToSubtract = date.getUTCDay();
+//   if (daysToSubtract < 5) {
+//     // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
+//     daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
+//   } else {
+//     // For day 6 (Saturday), go back 1 day
+//     daysToSubtract = 1;
+//   }
   
-  // Create a new date by subtracting days
-  const adjustedDate = new Date(date);
-  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
+//   // Create a new date by subtracting days
+//   const adjustedDate = new Date(date);
+//   adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
   
-  // Check if we've crossed a year boundary
-  if (adjustedDate.getUTCFullYear() !== originalYear) {
-    // If crossing year boundary, use the original date
-    return dateStr;
-  }
+//   // Check if we've crossed a year boundary
+//   if (adjustedDate.getUTCFullYear() !== originalYear) {
+//     // If crossing year boundary, use the original date
+//     return dateStr;
+//   }
   
-  // Format as YYYY-MM-DD
-  return adjustedDate.toISOString().split('T')[0];
-}
+//   // Format as YYYY-MM-DD
+//   return adjustedDate.toISOString().split('T')[0];
+// }
 
 /**
  * Format a date for friendly display
