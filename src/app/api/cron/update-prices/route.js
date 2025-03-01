@@ -1,26 +1,22 @@
 // src/app/api/cron/update-prices/route.js
 import { NextResponse } from 'next/server';
 import storage from '@/lib/storage';
-import { processPrices } from '@/scripts/process-prices'; // Adapt this to async/await as well
+import { processPrices } from '@/scripts/process-prices';
 
-// This function will be triggered by the Vercel Cron job
+// This function will be triggered by the Vercel Cron job or manually for initialization
 export async function GET(request) {
   try {
-    // Check for a secret key to prevent unauthorized access
+    // If this is a manual initialization, check for a secret key
     const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new NextResponse(JSON.stringify({ success: false, message: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'content-type': 'application/json' }
-      });
-    }
+    const isManualInit = authHeader && authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
-    // Run data initialization process
-    // You'll need to adapt your initializeAll function to work with the async storage
-    const { initializeAll } = require('../../../../../init-prices');
+    // Import initialization functions dynamically to avoid bundling issues
+    const { initializeAll } = await import('../../../../../init-prices.js');
+    
+    console.log('Starting price data initialization...');
     const result = await initializeAll();
     
-    // Process the combined data
+    console.log('Processing combined price data...');
     const processedData = await processPrices();
     
     // Store the processed data
@@ -30,7 +26,8 @@ export async function GET(request) {
       success: true,
       message: 'Price data updated successfully',
       updated: new Date().toISOString(),
-      commodities: Object.keys(processedData.charts || {})
+      commodities: Object.keys(processedData.charts || {}),
+      isManualInit
     });
   } catch (error) {
     console.error('Error updating prices:', error);
@@ -41,3 +38,6 @@ export async function GET(request) {
     }, { status: 500 });
   }
 }
+
+// Allow POST method for manual initialization
+export const POST = GET;

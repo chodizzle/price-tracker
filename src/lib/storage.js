@@ -1,3 +1,4 @@
+// src/lib/storage.js
 const { createClient } = require('redis');
 let client;
 let isConnected = false;
@@ -5,8 +6,10 @@ let isConnected = false;
 // Initialize Redis connection
 async function initializeRedis() {
   if (!isConnected) {
+    // Use the environment variables exactly as provided by Upstash
     client = createClient({
-      url: process.env.KV_URL || 'redis://localhost:6379'
+      url: process.env.KV_URL || 'redis://localhost:6379',
+      // Additional configuration if needed
     });
     
     client.on('error', (err) => {
@@ -16,7 +19,7 @@ async function initializeRedis() {
     
     await client.connect();
     isConnected = true;
-    console.log('Connected to Redis');
+    console.log('Connected to Upstash Redis');
   }
   return client;
 }
@@ -38,7 +41,7 @@ const storage = {
     return redis.del(key);
   },
   
-  // Add other methods as needed
+  // Additional Redis operations as needed
 };
 
 module.exports = storage;

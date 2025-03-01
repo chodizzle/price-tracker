@@ -14,11 +14,13 @@
     "update-eggs": "node init-prices.js update-eggs",
     "update-milk": "node init-prices.js update-milk",
     "update-gasoline": "node init-prices.js update-gasoline",
-    "process-prices": "node src/scripts/process-prices.js"
+    "process-prices": "node src/scripts/process-prices.js",
+    "manual-init": "node manual-init.js"
   },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-slot": "^1.1.2",
+    "@upstash/redis": "^1.34.4",
     "@vercel/kv": "^3.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,6 +28,7 @@
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "node-fetch": "^2.7.0",
+    "openssl": "^2.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
