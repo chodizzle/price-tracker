@@ -1,9 +1,9 @@
 // src/scripts/init-eia-prices.js
-const fs = require('fs');
 const path = require('path');
-const { priceDataManager } = require('../lib/priceDataManager');
+const { getPriceDataManager } = require('../lib/priceDataManager');
 const EIAApiClient = require('../lib/eiaApiClient');
 const { EIA_SERIES, EIA_COMMODITY_NAMES, EIA_API_MAPPING } = require('../lib/eiaConstants');
+const storage = require('../lib/storage');
 
 // Load environment variables
 require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
@@ -56,27 +56,16 @@ function calculateBaseline(prices) {
  */
 async function saveRawResponse(data, commodityKey) {
   try {
-    const dataDir = path.join(process.cwd(), 'data', 'raw');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `eia_${commodityKey.toLowerCase()}_${timestamp}.json`;
+    const key = `eia_${commodityKey.toLowerCase()}_${timestamp}`;
     
-    // Write to timestamp-specific file
-    fs.writeFileSync(
-      path.join(dataDir, filename),
-      JSON.stringify(data, null, 2)
-    );
+    // Save to storage
+    await storage.set(key, JSON.stringify(data));
     
-    // Also update the latest file
-    fs.writeFileSync(
-      path.join(dataDir, `eia_${commodityKey.toLowerCase()}_raw.json`),
-      JSON.stringify(data, null, 2)
-    );
+    // Also update the latest version
+    await storage.set(`eia_${commodityKey.toLowerCase()}_raw`, JSON.stringify(data));
     
-    console.log(`Saved raw EIA data to ${filename}`);
+    console.log(`Saved raw EIA data with key: ${key}`);
   } catch (error) {
     console.error('Error saving raw EIA data:', error);
   }
@@ -132,14 +121,18 @@ async function initializeCommodityData(commodityKey, seriesId) {
     const baseline = calculateBaseline(prices2024onwards);
     console.log(`${commodityKey} baseline stats:`, baseline);
     
-    // Add to price data manager
+    // Get data from storage for updating
+    const currentData = await storage.get('price_data');
+    let data = currentData ? JSON.parse(currentData) : {};
+    
+    // Add to price data storage
     const commodityId = commodityKey.toLowerCase();
     
     // Get the API series mapping if available
     const apiMapping = EIA_API_MAPPING[seriesId] || {};
     
-    if (!priceDataManager.data[commodityId]) {
-      priceDataManager.data[commodityId] = {
+    if (!data[commodityId]) {
+      data[commodityId] = {
         metadata: {
           lastUpdated: new Date().toISOString(),
           dataSource: {
@@ -155,23 +148,37 @@ async function initializeCommodityData(commodityKey, seriesId) {
       };
     } else {
       // Update metadata if it exists
-      priceDataManager.data[commodityId].metadata.lastUpdated = new Date().toISOString();
-      priceDataManager.data[commodityId].metadata.dataSource = {
-        ...priceDataManager.data[commodityId].metadata.dataSource,
+      data[commodityId].metadata.lastUpdated = new Date().toISOString();
+      data[commodityId].metadata.dataSource = {
+        ...data[commodityId].metadata.dataSource,
         2024: 'eia-api',
         2025: 'eia-api'
       };
-      priceDataManager.data[commodityId].metadata.name = EIA_COMMODITY_NAMES[commodityKey];
-      priceDataManager.data[commodityId].metadata.seriesId = seriesId;
-      priceDataManager.data[commodityId].metadata.series = apiMapping.facetSeries || seriesId.split('.')[1];
-      priceDataManager.data[commodityId].metadata.baseline = {
-        ...priceDataManager.data[commodityId].metadata.baseline,
+      data[commodityId].metadata.name = EIA_COMMODITY_NAMES[commodityKey];
+      data[commodityId].metadata.seriesId = seriesId;
+      data[commodityId].metadata.series = apiMapping.facetSeries || seriesId.split('.')[1];
+      data[commodityId].metadata.baseline = {
+        ...data[commodityId].metadata.baseline,
         2024: baseline
       };
     }
     
-    // Add prices
-    priceDataManager.addPriceData(commodityId, prices2024onwards);
+    // Add the new prices
+    const existingDates = new Set(data[commodityId].prices?.map(p => p.date) || []);
+    const newPrices = prices2024onwards.filter(p => !existingDates.has(p.date));
+    
+    if (newPrices.length > 0) {
+      data[commodityId].prices = [
+        ...(data[commodityId].prices || []),
+        ...newPrices
+      ].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Save the updated data
+      await storage.set('price_data', JSON.stringify(data));
+      console.log(`Added ${newPrices.length} new ${commodityId} prices`);
+    } else {
+      console.log(`No new prices to add for ${commodityId}`);
+    }
     
     console.log(`Successfully initialized ${commodityKey} price data`);
     return { baseline, prices: prices2024onwards };

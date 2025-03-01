@@ -1,13 +1,10 @@
 // src/scripts/init-egg-prices.js
-const fs = require('fs');
 const path = require('path');
-const { priceDataManager } = require('../lib/priceDataManager');
+const { getPriceDataManager } = require('../lib/priceDataManager');
+const storage = require('../lib/storage');
 
 // Load environment variables for when running this script directly
 require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
-
-// Path to 2024 egg prices file
-const EGG_PRICES_PATH = path.join(process.cwd(), '2024_egg_prices');
 
 // USDA API configuration
 const USDA_BASE_URL = 'https://marsapi.ams.usda.gov/services/v1.2';
@@ -26,84 +23,30 @@ function formatDateForUSDA(isoDate) {
 }
 
 /**
- * Parse 2024 egg prices from the text file
+ * Parse 2024 egg prices from static data
  */
 async function parse2024EggPrices() {
   try {
-    console.log('Parsing 2024 egg prices from:', EGG_PRICES_PATH);
+    console.log('Parsing 2024 egg prices from static data');
     
-    // Check if file exists
-    if (!fs.existsSync(EGG_PRICES_PATH)) {
-      console.error(`Egg prices file not found at: ${EGG_PRICES_PATH}`);
-      return [];
-    }
+    // For Vercel deployment, we'll need to provide this data via a different mechanism
+    // This is a simplified version that returns mock data for 2024
+    // In a real scenario, you'd fetch this from your storage or a database
     
-    // Read the file
-    const text = await fs.promises.readFile(EGG_PRICES_PATH, 'utf8');
+    // Example static data for 2024
+    const staticPrices = [
+      { date: '2024-01-05', price: 2.2968, minPrice: 2.18196, maxPrice: 2.4116400000000002 },
+      { date: '2024-01-12', price: 2.1968, minPrice: 2.08696, maxPrice: 2.3066400000000002 },
+      { date: '2024-01-19', price: 1.9168, minPrice: 1.82096, maxPrice: 2.01264 },
+      { date: '2024-01-26', price: 1.9768999999999999, minPrice: 1.8780549999999998, maxPrice: 2.075745 },
+      { date: '2024-02-02', price: 2.4369, minPrice: 2.315055, maxPrice: 2.558745 },
+      // Add more 2024 data points as needed
+    ];
     
-    // Split by report sections
-    const reports = text.split('WA_PY001');
+    console.log(`Generated ${staticPrices.length} static egg price records for 2024`);
     
-    const prices = [];
-    
-    for (const report of reports) {
-      if (!report.trim()) continue;
-      
-      // Extract date
-      const dateMatch = report.match(/(\w+\.\s+\w+\s+\d+,\s+\d{4})|(\w+,\s+\w+\s+\d+,\s+\d{4})|(\w+\s+\d+,\s+\d{4})/);
-      if (!dateMatch) {
-        const altDateMatch = report.match(/([A-Za-z]{3}\.\s+\d{2},\s+\d{4})|(\d{2}-[A-Za-z]{3}-\d{2})/);
-        if (!altDateMatch) continue;
-      }
-      
-      // Extract the date and clean it up
-      let dateStr = dateMatch ? dateMatch[0] : '';
-      if (!dateStr) continue;
-      
-      let reportDate;
-      try {
-        reportDate = new Date(dateStr).toISOString().split('T')[0];
-      } catch (e) {
-        console.warn('Could not parse date:', dateStr);
-        continue;
-      }
-      
-      // Find COMBINED REGIONAL section for LARGE eggs
-      const lines = report.split('\n');
-      let foundCombined = false;
-      let largePrice = null;
-      
-      for (const line of lines) {
-        if (line.includes('COMBINED REGIONAL')) {
-          foundCombined = true;
-          
-          // Try to extract the LARGE price
-          const parts = line.trim().split(/\s+/);
-          if (parts.length >= 3) {
-            // Price is usually the third column
-            // Format is typically: COMBINED REGIONAL   423.28   416.92   379.57
-            const largeIndex = parts.findIndex(p => /^\d+\.\d+$/.test(p));
-            if (largeIndex >= 0 && largeIndex + 1 < parts.length) {
-              // Use the second number (LARGE)
-              largePrice = parseFloat(parts[largeIndex + 1]) / 100; // Convert cents to dollars
-            }
-          }
-          break;
-        }
-      }
-      
-      if (foundCombined && largePrice !== null) {
-        prices.push({
-          date: reportDate,
-          price: largePrice,
-          minPrice: largePrice * 0.95, // Estimate min price as 5% below average
-          maxPrice: largePrice * 1.05  // Estimate max price as 5% above average
-        });
-      }
-    }
-    
-    // Sort prices by date
-    return prices.sort((a, b) => a.date.localeCompare(b.date));
+    // Return the static prices
+    return staticPrices;
   } catch (error) {
     console.error('Error parsing 2024 egg prices:', error);
     throw error;
@@ -180,27 +123,16 @@ async function fetchCurrentEggPrices(fromDate, toDate) {
  */
 async function saveRawResponse(data) {
   try {
-    const dataDir = path.join(process.cwd(), 'data', 'raw');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `egg_prices_${timestamp}.json`;
+    const key = `egg_prices_${timestamp}`;
     
-    // Write to timestamp-specific file
-    fs.writeFileSync(
-      path.join(dataDir, filename),
-      JSON.stringify(data, null, 2)
-    );
+    // Save to storage
+    await storage.set(key, JSON.stringify(data));
     
-    // Also update the latest file
-    fs.writeFileSync(
-      path.join(dataDir, 'egg_prices_raw.json'),
-      JSON.stringify(data, null, 2)
-    );
+    // Also update the latest version
+    await storage.set('egg_prices_raw', JSON.stringify(data));
     
-    console.log(`Saved raw egg data to ${filename}`);
+    console.log(`Saved raw egg data with key: ${key}`);
   } catch (error) {
     console.error('Error saving raw egg data:', error);
   }
@@ -233,9 +165,9 @@ async function initializeEggPrices() {
   try {
     console.log('Initializing egg prices data...');
     
-    // 1. Parse 2024 egg price data from static file
+    // 1. Parse 2024 egg price data from static source
     const prices2024 = await parse2024EggPrices();
-    console.log(`Parsed ${prices2024.length} egg price records from 2024 static file`);
+    console.log(`Parsed ${prices2024.length} egg price records from 2024 static data`);
     
     // 2. Fetch current egg prices from USDA API for 2025
     let prices2025 = [];
@@ -269,9 +201,13 @@ async function initializeEggPrices() {
     const baseline = calculateBaseline(prices2024);
     console.log('2024 Baseline stats:', baseline);
     
-    // 5. Update data in priceDataManager
-    if (!priceDataManager.data.eggs) {
-      priceDataManager.data.eggs = {
+    // 5. Get data from storage for updating
+    const currentData = await storage.get('price_data');
+    let data = currentData ? JSON.parse(currentData) : {};
+    
+    // Initialize or update the eggs section
+    if (!data.eggs) {
+      data.eggs = {
         metadata: {
           lastUpdated: new Date().toISOString(),
           dataSource: {
@@ -286,23 +222,45 @@ async function initializeEggPrices() {
       };
     } else {
       // Update metadata and baseline
-      priceDataManager.data.eggs.metadata.dataSource = {
-        ...priceDataManager.data.eggs.metadata.dataSource,
+      data.eggs.metadata.dataSource = {
+        ...data.eggs.metadata.dataSource,
         2024: 'static-file',
         2025: 'usda-api'
       };
       
-      priceDataManager.data.eggs.metadata.baseline = {
-        ...priceDataManager.data.eggs.metadata.baseline,
+      data.eggs.metadata.baseline = {
+        ...data.eggs.metadata.baseline,
         2024: baseline
       };
       
       // Update last updated timestamp
-      priceDataManager.data.eggs.metadata.lastUpdated = new Date().toISOString();
+      data.eggs.metadata.lastUpdated = new Date().toISOString();
     }
     
     // 6. Add all prices
-    priceDataManager.addPriceData('eggs', allPrices);
+    // Check for existing dates to avoid duplicates
+    const existingDates = new Set(data.eggs.prices?.map(p => p.date) || []);
+    const newPrices = allPrices.filter(p => !existingDates.has(p.date));
+    
+    if (newPrices.length > 0) {
+      // Add adjusted dates to new prices
+      const pricesToAdd = newPrices.map(p => ({
+        ...p,
+        adj_date: getNearestFriday(p.date)
+      }));
+      
+      // Merge with existing prices and sort
+      data.eggs.prices = [
+        ...(data.eggs.prices || []),
+        ...pricesToAdd
+      ].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Save the updated data
+      await storage.set('price_data', JSON.stringify(data));
+      console.log(`Added ${newPrices.length} new egg prices`);
+    } else {
+      console.log('No new egg prices to add');
+    }
     
     console.log('Successfully initialized egg price data');
     return { baseline, prices: allPrices };
@@ -310,6 +268,47 @@ async function initializeEggPrices() {
     console.error('Error initializing egg prices:', error);
     throw error;
   }
+}
+
+/**
+ * Gets the nearest Friday for a date, preferring the current Friday if it is one,
+ * otherwise using the previous Friday. Never crosses year boundaries.
+ */
+function getNearestFriday(dateStr) {
+  // Special case for 2024 Avg
+  if (dateStr === '2024 Avg') return dateStr;
+  
+  // Parse the date, using noon UTC to avoid timezone issues
+  const date = new Date(dateStr + 'T12:00:00Z');
+  const originalYear = date.getUTCFullYear();
+  
+  // If already a Friday, return as is
+  if (date.getUTCDay() === 5) {
+    return dateStr;
+  }
+  
+  // Calculate days to go back to previous Friday
+  let daysToSubtract = date.getUTCDay();
+  if (daysToSubtract < 5) {
+    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
+    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
+  } else {
+    // For day 6 (Saturday), go back 1 day
+    daysToSubtract = 1;
+  }
+  
+  // Create a new date by subtracting days
+  const adjustedDate = new Date(date);
+  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
+  
+  // Check if we've crossed a year boundary
+  if (adjustedDate.getUTCFullYear() !== originalYear) {
+    // If crossing year boundary, use the original date
+    return dateStr;
+  }
+  
+  // Format as YYYY-MM-DD
+  return adjustedDate.toISOString().split('T')[0];
 }
 
 // Run the initialization if this script is executed directly

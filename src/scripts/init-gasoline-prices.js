@@ -1,8 +1,8 @@
 // src/scripts/init-gasoline-prices.js
-const fs = require('fs');
 const path = require('path');
-const { priceDataManager } = require('../lib/priceDataManager');
+const { getPriceDataManager } = require('../lib/priceDataManager');
 const EIAGasolineFetcher = require('../lib/eiaGasolineFetcher');
+const storage = require('../lib/storage');
 
 // Load environment variables
 require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
@@ -18,27 +18,16 @@ if (!EIA_API_KEY) {
  */
 async function saveRawResponse(data) {
   try {
-    const dataDir = path.join(process.cwd(), 'data', 'raw');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `gasoline_prices_${timestamp}.json`;
+    const key = `gasoline_prices_raw_${timestamp}`;
     
-    // Write to timestamp-specific file
-    fs.writeFileSync(
-      path.join(dataDir, filename),
-      JSON.stringify(data, null, 2)
-    );
+    // Save to storage
+    await storage.set(key, JSON.stringify(data));
     
-    // Also update the latest file
-    fs.writeFileSync(
-      path.join(dataDir, 'gasoline_prices_raw.json'),
-      JSON.stringify(data, null, 2)
-    );
+    // Also update the latest version
+    await storage.set('gasoline_prices_raw', JSON.stringify(data));
     
-    console.log(`Saved raw gasoline data to ${filename}`);
+    console.log(`Saved raw gasoline data with key: ${key}`);
   } catch (error) {
     console.error('Error saving raw gasoline data:', error);
   }
@@ -114,11 +103,18 @@ async function initializeGasolinePrices() {
     const baseline = calculateBaseline(prices);
     console.log('Gasoline baseline stats:', baseline);
     
+    // Get price data manager
+    const priceDataManager = await getPriceDataManager();
+    
     // Add to price data manager
     const commodityId = 'gasoline_regular';
     
-    if (!priceDataManager.data[commodityId]) {
-      priceDataManager.data[commodityId] = {
+    // Get current data
+    const currentData = await storage.get('price_data');
+    let data = currentData ? JSON.parse(currentData) : {};
+    
+    if (!data[commodityId]) {
+      data[commodityId] = {
         metadata: {
           lastUpdated: new Date().toISOString(),
           dataSource: {
@@ -133,22 +129,37 @@ async function initializeGasolinePrices() {
       };
     } else {
       // Update metadata if it exists
-      priceDataManager.data[commodityId].metadata.lastUpdated = new Date().toISOString();
-      priceDataManager.data[commodityId].metadata.dataSource = {
-        ...priceDataManager.data[commodityId].metadata.dataSource,
+      data[commodityId].metadata.lastUpdated = new Date().toISOString();
+      data[commodityId].metadata.dataSource = {
+        ...data[commodityId].metadata.dataSource,
         2024: 'eia-api',
         2025: 'eia-api'
       };
-      priceDataManager.data[commodityId].metadata.name = 'Regular Gasoline (Gallon)';
-      priceDataManager.data[commodityId].metadata.seriesId = 'PET.EMM_EPMR_PTE_NUS_DPG.W';
-      priceDataManager.data[commodityId].metadata.baseline = {
-        ...priceDataManager.data[commodityId].metadata.baseline,
+      data[commodityId].metadata.name = 'Regular Gasoline (Gallon)';
+      data[commodityId].metadata.seriesId = 'PET.EMM_EPMR_PTE_NUS_DPG.W';
+      data[commodityId].metadata.baseline = {
+        ...data[commodityId].metadata.baseline,
         2024: baseline
       };
     }
     
     // Add prices
-    priceDataManager.addPriceData(commodityId, prices);
+    const existingDates = new Set(data[commodityId].prices.map(p => p.date));
+    const newPrices = prices.filter(p => !existingDates.has(p.date));
+    
+    if (newPrices.length > 0) {
+      // Add the new prices
+      data[commodityId].prices = [
+        ...data[commodityId].prices,
+        ...newPrices
+      ].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Save the updated data
+      await storage.set('price_data', JSON.stringify(data));
+      console.log(`Added ${newPrices.length} new gasoline prices`);
+    } else {
+      console.log('No new gasoline prices to add');
+    }
     
     console.log('Successfully initialized gasoline price data');
     return { baseline, prices };

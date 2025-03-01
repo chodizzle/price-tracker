@@ -1,7 +1,8 @@
 // src/scripts/init-milk-prices.js
-const fs = require('fs');
 const path = require('path');
-const { priceDataManager } = require('../lib/priceDataManager');
+const { getPriceDataManager } = require('../lib/priceDataManager');
+const storage = require('../lib/storage');
+
 // Load environment variables for when running this script directly
 require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 
@@ -60,19 +61,19 @@ async function fetchMilkPrices(fromDate, toDate) {
     
     // Process and transform the data
     const milkPrices = data.results
-  .filter(item => 
-    item.region === 'National' && 
-    item.package === 'Gallon' && 
-    item.organic === 'No' &&
-    item.wtd_avg_price !== null
-  )
-  .map(item => ({
-    date: new Date(item.report_end_date || item.report_begin_date).toISOString().split('T')[0],
-    price: parseFloat(item.wtd_avg_price),
-    minPrice: parseFloat(item.price_min || item.wtd_avg_price),
-    maxPrice: parseFloat(item.price_max || item.wtd_avg_price),
-    storeCount: parseInt(item.store_count || 0)
-  }));
+      .filter(item => 
+        item.region === 'National' && 
+        item.package === 'Gallon' && 
+        item.organic === 'No' &&
+        item.wtd_avg_price !== null
+      )
+      .map(item => ({
+        date: new Date(item.report_end_date || item.report_begin_date).toISOString().split('T')[0],
+        price: parseFloat(item.wtd_avg_price),
+        minPrice: parseFloat(item.price_min || item.wtd_avg_price),
+        maxPrice: parseFloat(item.price_max || item.wtd_avg_price),
+        storeCount: parseInt(item.store_count || 0)
+      }));
     
     // Sort by date
     return milkPrices.sort((a, b) => a.date.localeCompare(b.date));
@@ -87,27 +88,16 @@ async function fetchMilkPrices(fromDate, toDate) {
  */
 async function saveMilkRawResponse(data) {
   try {
-    const dataDir = path.join(process.cwd(), 'data', 'raw');
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `milk_prices_${timestamp}.json`;
+    const key = `milk_prices_${timestamp}`;
     
-    // Write to timestamp-specific file
-    fs.writeFileSync(
-      path.join(dataDir, filename),
-      JSON.stringify(data, null, 2)
-    );
+    // Save to storage
+    await storage.set(key, JSON.stringify(data));
     
-    // Also update the latest file
-    fs.writeFileSync(
-      path.join(dataDir, 'milk_prices_raw.json'),
-      JSON.stringify(data, null, 2)
-    );
+    // Also update the latest version
+    await storage.set('milk_prices_raw', JSON.stringify(data));
     
-    console.log(`Saved raw milk data to ${filename}`);
+    console.log(`Saved raw milk data with key: ${key}`);
   } catch (error) {
     console.error('Error saving raw milk data:', error);
   }
@@ -135,6 +125,46 @@ function calculateBaseline(prices) {
     min: Math.min(...values),
     max: Math.max(...values)
   };
+}
+
+/**
+ * Gets the nearest Friday for a date
+ */
+function getNearestFriday(dateStr) {
+  // Special case for 2024 Avg
+  if (dateStr === '2024 Avg') return dateStr;
+  
+  // Parse the date, using noon UTC to avoid timezone issues
+  const date = new Date(dateStr + 'T12:00:00Z');
+  const originalYear = date.getUTCFullYear();
+  
+  // If already a Friday, return as is
+  if (date.getUTCDay() === 5) {
+    return dateStr;
+  }
+  
+  // Calculate days to go back to previous Friday
+  let daysToSubtract = date.getUTCDay();
+  if (daysToSubtract < 5) {
+    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
+    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
+  } else {
+    // For day 6 (Saturday), go back 1 day
+    daysToSubtract = 1;
+  }
+  
+  // Create a new date by subtracting days
+  const adjustedDate = new Date(date);
+  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
+  
+  // Check if we've crossed a year boundary
+  if (adjustedDate.getUTCFullYear() !== originalYear) {
+    // If crossing year boundary, use the original date
+    return dateStr;
+  }
+  
+  // Format as YYYY-MM-DD
+  return adjustedDate.toISOString().split('T')[0];
 }
 
 /**
@@ -173,9 +203,13 @@ async function initializeMilkPrices() {
     const baseline = calculateBaseline(prices);
     console.log('2024 Baseline stats:', baseline);
     
-    // Update data in priceDataManager
-    if (!priceDataManager.data.milk) {
-      priceDataManager.data.milk = {
+    // Get data from storage for updating
+    const currentData = await storage.get('price_data');
+    let data = currentData ? JSON.parse(currentData) : {};
+    
+    // Update data in storage
+    if (!data.milk) {
+      data.milk = {
         metadata: {
           lastUpdated: new Date().toISOString(),
           dataSource: {
@@ -188,21 +222,46 @@ async function initializeMilkPrices() {
       };
     } else {
       // Update metadata and baseline
-      priceDataManager.data.milk.metadata.dataSource = {
-        ...priceDataManager.data.milk.metadata.dataSource,
+      data.milk.metadata.dataSource = {
+        ...data.milk.metadata.dataSource,
         2024: 'usda-api'
       };
       
       if (baseline) {
-        priceDataManager.data.milk.metadata.baseline = {
-          ...priceDataManager.data.milk.metadata.baseline,
+        data.milk.metadata.baseline = {
+          ...data.milk.metadata.baseline,
           2024: baseline
         };
       }
+      
+      // Update last updated timestamp
+      data.milk.metadata.lastUpdated = new Date().toISOString();
     }
     
     // Add all milk prices
-    priceDataManager.addPriceData('milk', prices);
+    // Check for existing dates to avoid duplicates
+    const existingDates = new Set(data.milk.prices?.map(p => p.date) || []);
+    const newPrices = prices.filter(p => !existingDates.has(p.date));
+    
+    if (newPrices.length > 0) {
+      // Add adjusted dates to new prices
+      const pricesToAdd = newPrices.map(p => ({
+        ...p,
+        adj_date: getNearestFriday(p.date)
+      }));
+      
+      // Merge with existing prices and sort
+      data.milk.prices = [
+        ...(data.milk.prices || []),
+        ...pricesToAdd
+      ].sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // Save the updated data
+      await storage.set('price_data', JSON.stringify(data));
+      console.log(`Added ${newPrices.length} new milk prices`);
+    } else {
+      console.log('No new milk prices to add');
+    }
     
     console.log('Successfully initialized milk price data');
     return { baseline, prices };

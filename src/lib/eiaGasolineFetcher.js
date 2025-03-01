@@ -1,5 +1,5 @@
 // src/lib/eiaGasolineFetcher.js
-const https = require('https');
+const fetch = require('node-fetch');
 
 /**
  * Simple focused module to fetch regular gasoline prices from the EIA API
@@ -15,9 +15,9 @@ class EIAGasolineFetcher {
    * @param {string} endDate - End date in YYYY-MM-DD format
    * @returns {Promise<Array>} - Array of price data points
    */
-  fetchGasolinePrices(startDate, endDate) {
-    return new Promise((resolve, reject) => {
-      // Following the approach from test-gasoline-api.js that works
+  async fetchGasolinePrices(startDate, endDate) {
+    try {
+      // Set up the API URL with proper parameters
       const url = new URL('https://api.eia.gov/v2/petroleum/pri/gnd/data/');
       url.searchParams.append('api_key', this.apiKey);
       url.searchParams.append('frequency', 'weekly');
@@ -32,76 +32,48 @@ class EIAGasolineFetcher {
 
       console.log(`Fetching gasoline prices from: ${url.toString()}`);
       
-      // Set up headers
-      const options = {
+      // Make the request
+      const response = await fetch(url.toString(), {
         headers: {
           'Accept': 'application/json'
         }
-      };
-      
-      // Make request
-      https.get(url, options, (res) => {
-        const { statusCode } = res;
-        let error;
-        
-        // Handle HTTP errors
-        if (statusCode !== 200) {
-          error = new Error(`EIA API request failed with status: ${statusCode}`);
-        }
-        
-        // Handle error
-        if (error) {
-          console.error(`EIA API Error: ${error.message}`);
-          // Consume response data to free up memory
-          res.resume();
-          reject(error);
-          return;
-        }
-        
-        // Collect data
-        let rawData = '';
-        res.on('data', (chunk) => { rawData += chunk; });
-        
-        // Process complete response
-        res.on('end', () => {
-          try {
-            const parsedData = JSON.parse(rawData);
-            
-            if (!parsedData.response || !parsedData.response.data) {
-              console.error('Invalid EIA API response format:', JSON.stringify(parsedData).substring(0, 500) + '...');
-              throw new Error('Invalid EIA API response format');
-            }
-            
-            // Transform the data to our standard format
-            const prices = parsedData.response.data.map(item => ({
-              date: item.period,
-              price: parseFloat(item.value),
-              minPrice: parseFloat(item.value) * 0.95, // Estimate min as 5% below average
-              maxPrice: parseFloat(item.value) * 1.05, // Estimate max as 5% above average
-              source: 'eia',
-              series: 'EMM_EPMR_PTE_NUS_DPG'
-            }));
-            
-            // Sort by date
-            const sortedPrices = prices.sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            console.log(`Successfully fetched ${sortedPrices.length} gasoline price records`);
-            resolve(sortedPrices);
-            
-          } catch (e) {
-            console.error('Error parsing EIA API response:', e.message);
-            // Log part of the raw response to diagnose the issue
-            if (rawData) {
-              console.error('First 300 characters of response:', rawData.substring(0, 300));
-            }
-            reject(new Error(`Error parsing EIA API response: ${e.message}`));
-          }
-        });
-      }).on('error', (e) => {
-        console.error(`EIA API request error: ${e.message}`);
-        reject(new Error(`EIA API request error: ${e.message}`));
       });
-    });
+      
+      // Handle HTTP errors
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('EIA API error response:', errorText);
+        throw new Error(`EIA API error: ${response.status} ${response.statusText}`);
+      }
+      
+      // Parse the response
+      const parsedData = await response.json();
+      
+      if (!parsedData.response || !parsedData.response.data) {
+        console.error('Invalid EIA API response format:', 
+                      JSON.stringify(parsedData).substring(0, 500) + '...');
+        throw new Error('Invalid EIA API response format');
+      }
+      
+      // Transform the data to our standard format
+      const prices = parsedData.response.data.map(item => ({
+        date: item.period,
+        price: parseFloat(item.value),
+        minPrice: parseFloat(item.value) * 0.95, // Estimate min as 5% below average
+        maxPrice: parseFloat(item.value) * 1.05, // Estimate max as 5% above average
+        source: 'eia',
+        series: 'EMM_EPMR_PTE_NUS_DPG'
+      }));
+      
+      // Sort by date
+      const sortedPrices = prices.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      console.log(`Successfully fetched ${sortedPrices.length} gasoline price records`);
+      return sortedPrices;
+    } catch (error) {
+      console.error('Error in EIA Gasoline Fetcher:', error);
+      throw error;
+    }
   }
 }
 

@@ -7,7 +7,7 @@ const { initializeEggPrices } = require('./src/scripts/init-egg-prices');
 const { initializeMilkPrices } = require('./src/scripts/init-milk-prices');
 const { initializeGasolinePrices } = require('./src/scripts/init-gasoline-prices');
 const { initializeEIAPrices } = require('./src/scripts/init-eia-prices');
-const { priceDataManager } = require('./src/lib/priceDataManager');
+const { getPriceDataManager } = require('./src/lib/priceDataManager');
 const { processPrices } = require('./src/scripts/process-prices');
 
 /**
@@ -18,6 +18,9 @@ async function initializeAll() {
   console.log('Current time:', new Date().toISOString());
   
   try {
+    // Get the price data manager with async awaiting
+    const priceDataManager = await getPriceDataManager();
+    
     // Initialize egg prices first
     console.log('\n--- INITIALIZING EGG PRICES ---');
     const eggResult = await initializeEggPrices();
@@ -49,31 +52,36 @@ async function initializeAll() {
     
     // Show final data statistics
     console.log('\n--- INITIALIZATION COMPLETE ---');
+    
+    // Load the final data for stats
+    const finalData = await storage.get('price_data');
+    const parsedData = JSON.parse(finalData);
+    
     console.log('Final data structure:', {
       eggs: {
-        count: priceDataManager.data.eggs?.prices?.length || 0,
+        count: parsedData.eggs?.prices?.length || 0,
         dateRange: {
-          first: priceDataManager.data.eggs?.prices[0]?.date,
-          last: priceDataManager.data.eggs?.prices[priceDataManager.data.eggs?.prices?.length - 1]?.date
+          first: parsedData.eggs?.prices[0]?.date,
+          last: parsedData.eggs?.prices[parsedData.eggs?.prices?.length - 1]?.date
         }
       },
       milk: {
-        count: priceDataManager.data.milk?.prices?.length || 0,
+        count: parsedData.milk?.prices?.length || 0,
         dateRange: {
-          first: priceDataManager.data.milk?.prices[0]?.date,
-          last: priceDataManager.data.milk?.prices[priceDataManager.data.milk?.prices?.length - 1]?.date
+          first: parsedData.milk?.prices[0]?.date,
+          last: parsedData.milk?.prices[parsedData.milk?.prices?.length - 1]?.date
         }
       },
       gasoline_regular: {
-        count: priceDataManager.data.gasoline_regular?.prices?.length || 0,
+        count: parsedData.gasoline_regular?.prices?.length || 0,
         dateRange: {
-          first: priceDataManager.data.gasoline_regular?.prices[0]?.date,
-          last: priceDataManager.data.gasoline_regular?.prices[priceDataManager.data.gasoline_regular?.prices?.length - 1]?.date
+          first: parsedData.gasoline_regular?.prices[0]?.date,
+          last: parsedData.gasoline_regular?.prices[parsedData.gasoline_regular?.prices?.length - 1]?.date
         }
       },
       energy: {
-        commodities: Object.keys(priceDataManager.data).filter(key => 
-          !['eggs', 'milk', 'gasoline_regular'].includes(key) && priceDataManager.data[key]?.prices?.length > 0
+        commodities: Object.keys(parsedData).filter(key => 
+          !['eggs', 'milk', 'gasoline_regular'].includes(key) && parsedData[key]?.prices?.length > 0
         )
       },
       processed: {
@@ -90,50 +98,50 @@ async function initializeAll() {
   }
 }
 
+// Import the storage module
+const storage = require('./src/lib/storage');
+
 // Check if we should update just one commodity
 const updateArg = process.argv[2];
-if (updateArg === 'update-milk') {
-  console.log('Updating only milk prices...');
-  initializeMilkPrices()
-    .then(() => processPrices())
-    .then(() => console.log('Milk prices update complete!'))
-    .catch(error => {
-      console.error('Failed to update milk prices:', error);
-      process.exit(1);
-    });
-} else if (updateArg === 'update-eggs') {
-  console.log('Updating only egg prices...');
-  initializeEggPrices()
-    .then(() => processPrices())
-    .then(() => console.log('Egg prices update complete!'))
-    .catch(error => {
-      console.error('Failed to update egg prices:', error);
-      process.exit(1);
-    });
-} else if (updateArg === 'update-gasoline') {
-  console.log('Updating only gasoline prices...');
-  initializeGasolinePrices()
-    .then(() => processPrices())
-    .then(() => console.log('Gasoline prices update complete!'))
-    .catch(error => {
-      console.error('Failed to update gasoline prices:', error);
-      process.exit(1);
-    });
-} else if (updateArg === 'update-eia') {
-  console.log('Updating only EIA energy prices...');
-  initializeEIAPrices()
-    .then(() => processPrices())
-    .then(() => console.log('EIA energy prices update complete!'))
-    .catch(error => {
-      console.error('Failed to update EIA energy prices:', error);
-      process.exit(1);
-    });
-} else {
-  // Run the full initialization if no specific update is requested
-  initializeAll().catch(error => {
-    console.error('Full initialization failed:', error);
+
+// Function to handle the async operations
+async function runUpdate() {
+  try {
+    if (updateArg === 'update-milk') {
+      console.log('Updating only milk prices...');
+      await initializeMilkPrices();
+      await processPrices();
+      console.log('Milk prices update complete!');
+    } else if (updateArg === 'update-eggs') {
+      console.log('Updating only egg prices...');
+      await initializeEggPrices();
+      await processPrices();
+      console.log('Egg prices update complete!');
+    } else if (updateArg === 'update-gasoline') {
+      console.log('Updating only gasoline prices...');
+      await initializeGasolinePrices();
+      await processPrices();
+      console.log('Gasoline prices update complete!');
+    } else if (updateArg === 'update-eia') {
+      console.log('Updating only EIA energy prices...');
+      await initializeEIAPrices();
+      await processPrices();
+      console.log('EIA energy prices update complete!');
+    } else {
+      // Run the full initialization if no specific update is requested
+      await initializeAll();
+      console.log('Full initialization complete!');
+    }
+    
+    // Exit the process when done
+    process.exit(0);
+  } catch (error) {
+    console.error('Update failed:', error);
     process.exit(1);
-  });
+  }
 }
+
+// Run the async update function
+runUpdate();
 
 module.exports = { initializeAll };

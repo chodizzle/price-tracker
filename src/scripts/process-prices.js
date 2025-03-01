@@ -1,11 +1,5 @@
 // src/scripts/process-prices.js
-const fs = require('fs');
-const path = require('path');
-
-// File paths
-const DATA_DIR = path.join(process.cwd(), 'data');
-const PRICES_FILE = path.join(DATA_DIR, 'prices.json');
-const COMBINED_FILE = path.join(DATA_DIR, 'combined-prices.json');
+const storage = require('../lib/storage');
 
 /**
  * Gets the nearest Friday for a date, preferring the current Friday if it is one,
@@ -92,12 +86,13 @@ async function processPrices() {
   try {
     console.log('Processing price data...');
     
-    // Read raw price data
-    if (!fs.existsSync(PRICES_FILE)) {
-      throw new Error(`Raw price file not found: ${PRICES_FILE}`);
+    // Read raw price data from storage
+    const rawDataStr = await storage.get('price_data');
+    if (!rawDataStr) {
+      throw new Error('Raw price data not found in storage');
     }
     
-    const rawData = JSON.parse(fs.readFileSync(PRICES_FILE, 'utf8'));
+    const rawData = JSON.parse(rawDataStr);
     console.log('Loaded raw price data with commodities:', Object.keys(rawData));
     
     // Define commodity quantities for basket
@@ -370,9 +365,9 @@ async function processPrices() {
       }
     }
     
-    // Write the processed data
-    fs.writeFileSync(COMBINED_FILE, JSON.stringify(processedData, null, 2));
-    console.log(`Processed data written to ${COMBINED_FILE}`);
+    // Write the processed data to storage
+    await storage.set('combined_price_data', JSON.stringify(processedData));
+    console.log('Processed data written to storage');
     
     return processedData;
   } catch (error) {
