@@ -8,20 +8,19 @@ export async function POST(request) {
     // Check authorization
     const authHeader = request.headers.get('authorization');
     const secretKey = process.env.CRON_SECRET;
+    const adminKey = process.env.ADMIN_SECRET_KEY;
     
-    if (!secretKey) {
+    if (!secretKey && !adminKey) {
       return NextResponse.json({ 
         success: false, 
-        error: 'CRON_SECRET not configured in environment' 
+        error: 'Neither CRON_SECRET nor ADMIN_SECRET_KEY configured in environment' 
       }, { status: 500 });
     }
     
-    // Force flag allows bypassing environment checks (use carefully)
-    const isAuthorized = authHeader && (
-      authHeader === `Bearer ${secretKey}` || 
-      (request.nextUrl.searchParams.get('force') === 'true' && 
-       authHeader === `Bearer ${process.env.ADMIN_SECRET_KEY}`)
-    );
+    // Check if authorized with either secret
+    const isAuthorized = 
+      (secretKey && authHeader === `Bearer ${secretKey}`) || 
+      (adminKey && authHeader === `Bearer ${adminKey}`);
     
     if (!isAuthorized) {
       return NextResponse.json({ 
