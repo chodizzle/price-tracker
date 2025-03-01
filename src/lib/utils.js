@@ -1,7 +1,8 @@
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge"
+// src/lib/utils.js
+const { clsx } = require("clsx");
+const { twMerge } = require("tailwind-merge");
 
-export function cn(...inputs) {
+function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
@@ -12,7 +13,7 @@ export function cn(...inputs) {
  * @param {string} dateStr - Date in YYYY-MM-DD format
  * @returns {string} Nearest Friday in YYYY-MM-DD format
  */
-export function getNearestFriday(dateStr) {
+function getNearestFriday(dateStr) {
   // Special case for 2024 Avg
   if (dateStr === '2024 Avg') return dateStr;
   
@@ -54,7 +55,7 @@ export function getNearestFriday(dateStr) {
  * @param {string} dateStr - Date in YYYY-MM-DD format
  * @returns {boolean} True if the date is a Friday
  */
-export function isFriday(dateStr) {
+function isFriday(dateStr) {
   const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
   return date.getUTCDay() === 5; // 5 = Friday in UTC
 }
