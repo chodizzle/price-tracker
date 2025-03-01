@@ -38,10 +38,10 @@ async function initializeAll() {
     console.log(`Initialized ${gasolineResult?.prices?.length || 0} gasoline price records`);
     console.log('Gasoline prices baseline:', gasolineResult?.baseline);
     
-    // Then initialize other EIA energy prices
-    console.log('\n--- INITIALIZING OTHER EIA ENERGY PRICES ---');
-    const eiaResult = await initializeEIAPrices();
-    console.log('EIA prices initialized for commodities:', Object.keys(eiaResult || {}).join(', '));
+    // // Then initialize other EIA energy prices
+    // console.log('\n--- INITIALIZING OTHER EIA ENERGY PRICES ---');
+    // const eiaResult = await initializeEIAPrices();
+    // console.log('EIA prices initialized for commodities:', Object.keys(eiaResult || {}).join(', '));
     
     // Process the combined data
     console.log('\n--- PROCESSING COMBINED DATA ---');
