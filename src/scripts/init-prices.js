@@ -121,11 +121,11 @@ async function runUpdate() {
       await initializeGasolinePrices();
       await processPrices();
       console.log('Gasoline prices update complete!');
-    } else if (updateArg === 'update-eia') {
-      console.log('Updating only EIA energy prices...');
-      await initializeEIAPrices();
-      await processPrices();
-      console.log('EIA energy prices update complete!');
+    // } else if (updateArg === 'update-eia') {
+    //   console.log('Updating only EIA energy prices...');
+    //   await initializeEIAPrices();
+    //   await processPrices();
+    //   console.log('EIA energy prices update complete!');
     } else {
       // Run the full initialization if no specific update is requested
       await initializeAll();

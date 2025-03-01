@@ -19,29 +19,34 @@ if (!ADMIN_SECRET_KEY) {
 
 // Remove trailing slashes from the URL
 const baseUrl = VERCEL_URL.replace(/\/+$/, '');
+// Define the API URL properly
+const apiUrl = `https://${baseUrl}/api/prices`;
 
 async function runTest() {
-    try {
-        const apiResponse = await fetch(apiUrl);
-        console.log(`API response status: ${apiResponse.status}`);
-        
-        // Continue even if it's a 404 with "Combined price data not available"
-        if (!apiResponse.ok) {
-          const errorText = await apiResponse.text();
-          console.log('Error response:', errorText);
-          
-          if (apiResponse.status === 404 && errorText.includes('Combined price data not available')) {
-            console.log('API responded with "Combined price data not available" - this is expected before initialization');
-          } else {
-            throw new Error(`API request failed with status ${apiResponse.status}`);
-          }
-        }
+  try {
+    console.log('\n1. Testing API endpoint...');
+    console.log(`API URL: ${apiUrl}`);
     
-    const apiData = await apiResponse.json();
-    console.log('API response:', apiData.success ? 'SUCCESS' : 'FAILED');
+    const apiResponse = await fetch(apiUrl);
+    console.log(`API response status: ${apiResponse.status}`);
     
-    if (!apiData.success) {
-      console.error('API returned error:', apiData.error);
+    // Continue even if it's a 404 with "Combined price data not available"
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      console.log('Error response:', errorText);
+      
+      if (apiResponse.status === 404 && errorText.includes('Combined price data not available')) {
+        console.log('API responded with "Combined price data not available" - this is expected before initialization');
+      } else {
+        throw new Error(`API request failed with status ${apiResponse.status}`);
+      }
+    } else {
+      const apiData = await apiResponse.json();
+      console.log('API response:', apiData.success ? 'SUCCESS' : 'FAILED');
+      
+      if (!apiData.success) {
+        console.error('API returned error:', apiData.error);
+      }
     }
     
     // 2. Test data initialization (if needed)
