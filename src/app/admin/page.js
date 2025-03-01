@@ -9,6 +9,7 @@ export default function AdminPage() {
   const [result, setResult] = useState(null);
   const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
+  const [kvTestResult, setKvTestResult] = useState(null);
   
   // Fetch status on load
   useEffect(() => {
@@ -25,6 +26,31 @@ export default function AdminPage() {
     } catch (error) {
       console.error('Error fetching status:', error);
       setMessage(`Error: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Test KV connection directly
+  const testKvConnection = async () => {
+    try {
+      setLoading(true);
+      setMessage('Testing direct KV connection...');
+      
+      const response = await fetch('/api/diagnostic/kv');
+      const data = await response.json();
+      
+      setKvTestResult(data);
+      
+      if (data.kvTest.connected) {
+        setMessage('KV connection test successful! 🎉');
+      } else {
+        setMessage(`KV connection test failed: ${data.kvTest.error}`);
+      }
+    } catch (error) {
+      console.error('Error testing KV connection:', error);
+      setMessage(`Error: ${error.message}`);
+      setKvTestResult({ error: error.message });
     } finally {
       setLoading(false);
     }
@@ -76,13 +102,22 @@ export default function AdminPage() {
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               <span>System Status</span>
-              <button 
-                onClick={fetchStatus}
-                disabled={loading}
-                className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md"
-              >
-                Refresh
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={testKvConnection}
+                  disabled={loading}
+                  className="px-3 py-1 text-sm bg-green-500 text-white rounded-md"
+                >
+                  Test KV
+                </button>
+                <button 
+                  onClick={fetchStatus}
+                  disabled={loading}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md"
+                >
+                  Refresh
+                </button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -108,10 +143,27 @@ export default function AdminPage() {
                   <span className="font-semibold">Environment:</span>
                   <ul className="ml-4 list-disc">
                     <li>KV_URL configured: {status.environment.kv_url_configured ? '✅' : '❌'}</li>
+                    <li>KV_REST_API configured: {status.environment.kv_rest_api_configured ? '✅' : '❌'}</li>
                     <li>USDA_API_KEY configured: {status.environment.usda_api_key_configured ? '✅' : '❌'}</li>
                     <li>EIA_API_KEY configured: {status.environment.eia_api_key_configured ? '✅' : '❌'}</li>
                     <li>CRON_SECRET configured: {status.environment.cron_secret_configured ? '✅' : '❌'}</li>
                     <li>ADMIN_SECRET_KEY configured: {status.environment.admin_secret_key_configured ? '✅' : '❌'}</li>
+                  </ul>
+                </div>
+                
+                <div className="mb-3">
+                  <span className="font-semibold">KV Connection Details:</span>
+                  <ul className="ml-4 list-disc">
+                    <li>Status: {status.redis.status}</li>
+                    <li>Initialized: {status.redis.connectionDetails?.initialized ? '✅' : '❌'}</li>
+                    <li>Connected: {status.redis.connectionDetails?.connected ? '✅' : '❌'}</li>
+                    {status.redis.connectionDetails?.lastError && (
+                      <li className="text-red-600">
+                        Last Error: {status.redis.connectionDetails.lastError.message}
+                        <br/>
+                        <span className="text-xs">{status.redis.connectionDetails.lastError.timestamp}</span>
+                      </li>
+                    )}
                   </ul>
                 </div>
                 
@@ -165,6 +217,15 @@ export default function AdminPage() {
               <div className="mt-4 border rounded p-3 bg-gray-50">
                 <pre className="text-xs overflow-auto whitespace-pre-wrap">
                   {JSON.stringify(result, null, 2)}
+                </pre>
+              </div>
+            )}
+            
+            {kvTestResult && (
+              <div className="mt-4 border rounded p-3 bg-gray-50">
+                <h4 className="font-medium mb-2">KV Test Result:</h4>
+                <pre className="text-xs overflow-auto whitespace-pre-wrap">
+                  {JSON.stringify(kvTestResult, null, 2)}
                 </pre>
               </div>
             )}
