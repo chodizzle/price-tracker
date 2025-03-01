@@ -1,7 +1,6 @@
 // src/app/api/cron/update-prices/route.js
 import { NextResponse } from 'next/server';
 import storage from '@/lib/storage';
-import { processPrices } from '@/scripts/process-prices';
 
 // This function will be triggered by the Vercel Cron job or manually for initialization
 export async function GET(request) {
@@ -10,11 +9,15 @@ export async function GET(request) {
     const authHeader = request.headers.get('authorization');
     const isManualInit = authHeader && authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
-    // Import initialization functions dynamically to avoid bundling issues
-    const { initializeAll } = await import('../../../../scripts/init-prices.js');
+    // Import initialization functions dynamically with proper ES module syntax
+    const initPricesModule = await import('@/scripts/init-prices');
+    const processPricesModule = await import('@/scripts/process-prices');
+    
+    const { initializeAll } = initPricesModule;
+    const { processPrices } = processPricesModule;
     
     console.log('Starting price data initialization...');
-    const result = await initializeAll();
+    await initializeAll();
     
     console.log('Processing combined price data...');
     const processedData = await processPrices();

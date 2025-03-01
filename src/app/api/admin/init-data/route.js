@@ -5,9 +5,12 @@ import storage from '@/lib/storage';
 // Dynamically import initialization functions to avoid bundling issues
 async function runInitialization() {
   try {
-    // Import the initialization function
-    const { initializeAll } = await import('@/scripts/init-prices');
-    const { processPrices } = await import('@/scripts/process-prices');
+    // Import the initialization function - use proper ES module syntax
+    const initPricesModule = await import('@/scripts/init-prices');
+    const processPricesModule = await import('@/scripts/process-prices');
+    
+    const { initializeAll } = initPricesModule;
+    const { processPrices } = processPricesModule;
     
     // Run initialization
     console.log('Starting price data initialization...');
@@ -21,8 +24,8 @@ async function runInitialization() {
       success: true,
       message: 'Data initialized successfully',
       stats: {
-        commodities: Object.keys(result.charts),
-        basketPoints: result.basket.length,
+        commodities: Object.keys(result.charts || {}),
+        basketPoints: result.basket?.length || 0,
         timestamp: new Date().toISOString()
       }
     };
