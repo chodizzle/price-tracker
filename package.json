@@ -18,6 +18,9 @@
     "test-local": "node test-storage-flow.js",
     "test-vercel": "node vercel-test.js",
     "test-redis": "node test-redis.js",
+    "check-api": "node check-api.js",
+    "check-admin-api": "node check-admin-api.js",
+    "direct-init": "node direct-init.js",
     "init-vercel": "node vercel-test.js --init"
   },
   "dependencies": {

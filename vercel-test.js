@@ -17,29 +17,38 @@ if (!ADMIN_SECRET_KEY) {
   process.exit(1);
 }
 
+// Remove trailing slashes from the URL
+const baseUrl = VERCEL_URL.replace(/\/+$/, '');
+
 async function runTest() {
-  try {
-    console.log('=== TESTING VERCEL DEPLOYMENT ===');
-    console.log(`URL: ${VERCEL_URL}`);
-    
-    // 1. Test the API endpoint
-    console.log('\n1. Testing prices API endpoint...');
-    const apiUrl = `https://${VERCEL_URL}/api/prices`;
-    console.log(`API URL: ${apiUrl}`);
-    
-    const apiResponse = await fetch(apiUrl);
-    if (!apiResponse.ok) {
-      throw new Error(`API request failed with status ${apiResponse.status}`);
-    }
+    try {
+        const apiResponse = await fetch(apiUrl);
+        console.log(`API response status: ${apiResponse.status}`);
+        
+        // Continue even if it's a 404 with "Combined price data not available"
+        if (!apiResponse.ok) {
+          const errorText = await apiResponse.text();
+          console.log('Error response:', errorText);
+          
+          if (apiResponse.status === 404 && errorText.includes('Combined price data not available')) {
+            console.log('API responded with "Combined price data not available" - this is expected before initialization');
+          } else {
+            throw new Error(`API request failed with status ${apiResponse.status}`);
+          }
+        }
     
     const apiData = await apiResponse.json();
     console.log('API response:', apiData.success ? 'SUCCESS' : 'FAILED');
+    
+    if (!apiData.success) {
+      console.error('API returned error:', apiData.error);
+    }
     
     // 2. Test data initialization (if needed)
     const shouldInitData = process.argv.includes('--init');
     if (shouldInitData) {
       console.log('\n2. Testing data initialization...');
-      const initUrl = `https://${VERCEL_URL}/api/admin/init-data`;
+      const initUrl = `https://${baseUrl}/api/admin/init-data`;
       console.log(`Init URL: ${initUrl}`);
       
       const initResponse = await fetch(initUrl, {
@@ -48,7 +57,11 @@ async function runTest() {
         }
       });
       
+      console.log(`Init response status: ${initResponse.status}`);
+      
       if (!initResponse.ok) {
+        const errorText = await initResponse.text();
+        console.error('Error response:', errorText);
         throw new Error(`Init request failed with status ${initResponse.status}`);
       }
       
@@ -68,6 +81,7 @@ async function runTest() {
   } catch (error) {
     console.error('\n❌ TEST FAILED');
     console.error(error);
+    process.exit(1);
   }
 }
 
