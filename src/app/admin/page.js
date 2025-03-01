@@ -10,6 +10,8 @@ export default function AdminPage() {
   const [secretKey, setSecretKey] = useState('');
   const [message, setMessage] = useState('');
   const [kvTestResult, setKvTestResult] = useState(null);
+  const [directKvTestResult, setDirectKvTestResult] = useState(null);
+  const [migrateResult, setMigrateResult] = useState(null);
   
   // Fetch status on load
   useEffect(() => {
@@ -51,6 +53,71 @@ export default function AdminPage() {
       console.error('Error testing KV connection:', error);
       setMessage(`Error: ${error.message}`);
       setKvTestResult({ error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Advanced direct KV connection test
+  const testDirectKvConnection = async () => {
+    try {
+      setLoading(true);
+      setMessage('Running advanced KV diagnostic tests...');
+      
+      const response = await fetch('/api/diagnostic/direct-kv');
+      const data = await response.json();
+      
+      setDirectKvTestResult(data);
+      
+      const successfulTests = data.tests?.filter(test => test.status === "success") || [];
+      if (successfulTests.length > 0) {
+        setMessage(`Found a working KV connection method! 🎉 ${data.recommendation}`);
+      } else {
+        setMessage(`All KV connection tests failed. ${data.recommendation}`);
+      }
+    } catch (error) {
+      console.error('Error running advanced KV diagnostic:', error);
+      setMessage(`Error: ${error.message}`);
+      setDirectKvTestResult({ error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Initialize database structure directly using migration endpoint
+  const migrateDatabase = async () => {
+    if (!secretKey) {
+      setMessage('Please enter the admin secret key');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setMessage('Setting up initial database structure...');
+      
+      const response = await fetch('/api/admin/migrate', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${secretKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({}) // Uses default connection options
+      });
+      
+      const data = await response.json();
+      setMigrateResult(data);
+      
+      if (data.success) {
+        setMessage('Database structure initialized successfully! Now try initializing price data.');
+        // Refresh status to show the data is now present
+        await fetchStatus();
+      } else {
+        setMessage(`Database migration failed: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error migrating database:', error);
+      setMessage(`Error: ${error.message}`);
+      setMigrateResult({ error: error.message });
     } finally {
       setLoading(false);
     }
@@ -103,6 +170,13 @@ export default function AdminPage() {
             <CardTitle className="flex justify-between items-center">
               <span>System Status</span>
               <div className="flex gap-2">
+                <button 
+                  onClick={testDirectKvConnection}
+                  disabled={loading}
+                  className="px-3 py-1 text-sm bg-purple-500 text-white rounded-md"
+                >
+                  Advanced KV Test
+                </button>
                 <button 
                   onClick={testKvConnection}
                   disabled={loading}
@@ -199,13 +273,25 @@ export default function AdminPage() {
               />
             </div>
             
-            <button
-              onClick={initializeData}
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Processing...' : 'Initialize Data'}
-            </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={migrateDatabase}
+                disabled={loading}
+                className="w-full bg-purple-600 text-white py-2 rounded-md font-medium hover:bg-purple-700 disabled:bg-gray-400"
+                title="Set up initial database structure without loading price data"
+              >
+                {loading ? 'Processing...' : 'Initialize Database Structure'}
+              </button>
+            
+              <button
+                onClick={initializeData}
+                disabled={loading}
+                className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400"
+                title="Fetch price data from USDA and EIA APIs"
+              >
+                {loading ? 'Processing...' : 'Initialize Price Data'}
+              </button>
+            </div>
             
             {message && (
               <div className={`mt-4 p-3 rounded ${result?.success ? 'bg-green-100' : 'bg-red-100'}`}>
@@ -218,6 +304,52 @@ export default function AdminPage() {
                 <pre className="text-xs overflow-auto whitespace-pre-wrap">
                   {JSON.stringify(result, null, 2)}
                 </pre>
+              </div>
+            )}
+            
+            {migrateResult && (
+              <div className="mt-4 border rounded p-3 bg-gray-50">
+                <h4 className="font-medium mb-2">Database Migration Result:</h4>
+                <div className={`mb-3 p-2 ${migrateResult.success ? 'bg-green-50' : 'bg-red-50'} rounded`}>
+                  <p className={migrateResult.success ? 'text-green-600' : 'text-red-600'}>
+                    {migrateResult.success ? 'Success! Database structure initialized.' : 'Migration failed.'}
+                  </p>
+                  {migrateResult.message && <p className="text-sm mt-1">{migrateResult.message}</p>}
+                  {migrateResult.error && <p className="text-sm text-red-600 mt-1">{migrateResult.error}</p>}
+                </div>
+                <div className="text-xs overflow-auto whitespace-pre-wrap">
+                  <pre>{JSON.stringify(migrateResult, null, 2)}</pre>
+                </div>
+              </div>
+            )}
+            
+            {directKvTestResult && (
+              <div className="mt-4 border rounded p-3 bg-gray-50">
+                <h4 className="font-medium mb-2">Advanced KV Test Results:</h4>
+                {directKvTestResult.tests && (
+                  <div className="mb-3">
+                    <h5 className="font-medium">Test Results:</h5>
+                    <ul className="list-disc ml-4">
+                      {directKvTestResult.tests.map((test, index) => (
+                        <li key={index} className={test.status === 'success' ? 'text-green-600' : 'text-red-600'}>
+                          {test.name}: {test.status}
+                          {test.result && <div className="text-sm">{test.result}</div>}
+                          {test.error && <div className="text-sm text-red-500">{test.error}</div>}
+                          {test.convertedUrl && <div className="text-sm font-mono break-all">{test.convertedUrl}</div>}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {directKvTestResult.recommendation && (
+                  <div className="mb-3 p-2 bg-blue-50 rounded">
+                    <h5 className="font-medium">Recommendation:</h5>
+                    <p>{directKvTestResult.recommendation}</p>
+                  </div>
+                )}
+                <div className="text-xs overflow-auto whitespace-pre-wrap">
+                  <pre>{JSON.stringify(directKvTestResult, null, 2)}</pre>
+                </div>
               </div>
             )}
             
