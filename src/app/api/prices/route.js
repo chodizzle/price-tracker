@@ -1,24 +1,21 @@
 // src/app/api/prices/route.js
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import storage from '@/lib/storage';
 
 export async function GET() {
   try {
-    // Path to the combined-prices.json file
-    const filePath = path.join(process.cwd(), 'data', 'combined-prices.json');
+    // Get the combined price data from storage
+    const rawData = await storage.get('combined_price_data');
     
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
+    if (!rawData) {
       return NextResponse.json(
         { success: false, error: 'Combined price data not available' },
         { status: 404 }
       );
     }
     
-    // Read and parse the file
-    const fileData = await fs.promises.readFile(filePath, 'utf8');
-    const priceData = JSON.parse(fileData);
+    // Parse the data
+    const priceData = JSON.parse(rawData);
     
     // Return the data
     return NextResponse.json({
