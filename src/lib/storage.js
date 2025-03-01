@@ -1,37 +1,53 @@
-// src/lib/storage.js
-const { createClient } = require('redis');
-let client;
-let isConnected = false;
+// src/lib/storage.js - Enhanced for Vercel + Upstash
+const { createClient } = require('@vercel/kv');
+const { createClient: createRedisClient } = require('redis');
+
+// Flag to check which client we're using
+let usingVercelKV = false;
+let client = null;
 let connectionPromise = null;
 
 /**
- * Initialize Redis connection with improved error handling and connection management
+ * Initialize storage connection
  */
-async function initializeRedis() {
+async function initializeStorage() {
   // If already connecting, return the existing promise
   if (connectionPromise) {
     return connectionPromise;
   }
   
-  // If already connected, return the client
-  if (isConnected && client) {
+  // If already connected and client exists, return the client
+  if (client) {
     return client;
   }
   
   // Create a new connection promise
   connectionPromise = new Promise(async (resolve, reject) => {
     try {
-      // Use the environment variables provided by Upstash/Vercel
-      const redisUrl = process.env.KV_URL || process.env.REDIS_URL || 'redis://localhost:6379';
+      // First, try to use Vercel KV (preferred for Vercel deployments)
+      if (process.env.KV_URL || (process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)) {
+        console.log('Using Vercel KV for storage');
+        
+        // Vercel KV doesn't need explicit connection - just create the client
+        client = createClient({
+          url: process.env.KV_URL,
+          token: process.env.KV_REST_API_TOKEN,
+        });
+        
+        usingVercelKV = true;
+        resolve(client);
+        return;
+      }
       
-      // Log connection without exposing credentials
-      const sanitizedUrl = redisUrl.includes('@') 
-        ? redisUrl.replace(/\/\/.*@/, '//***:***@') 
-        : redisUrl;
-      console.log(`Connecting to Redis at ${sanitizedUrl}...`);
+      // Fall back to standard Redis client
+      console.log('Using Redis client for storage');
       
-      // Create a new client
-      client = createClient({
+      // Use the environment variables
+      const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL || 'redis://localhost:6379';
+      const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+      
+      // Configure client based on what we have
+      const clientOptions = {
         url: redisUrl,
         socket: {
           reconnectStrategy: (retries) => {
@@ -40,35 +56,40 @@ async function initializeRedis() {
             return Math.min(retries * 100, 10000);
           }
         }
-      });
+      };
       
+      // Add token if available (for Upstash REST client)
+      if (redisToken) {
+        clientOptions.token = redisToken;
+      }
+      
+      // Create standard Redis client
+      client = createRedisClient(clientOptions);
+      
+      // Set up event handlers
       client.on('error', (err) => {
-        console.error('Redis Client Error', err);
-        isConnected = false;
+        console.error('Redis client error:', err);
       });
       
       client.on('ready', () => {
         console.log('Redis client ready');
-        isConnected = true;
       });
       
-      client.on('reconnecting', () => {
-        console.log('Redis client reconnecting...');
-        isConnected = false;
-      });
-      
-      client.on('end', () => {
-        console.log('Redis client connection closed');
-        isConnected = false;
-        connectionPromise = null;
-      });
-      
+      // Connect to Redis
       await client.connect();
-      isConnected = true;
+      
+      // Verify connection with ping
+      const pingResult = await client.ping();
+      if (pingResult !== 'PONG') {
+        throw new Error('Redis ping failed');
+      }
+      
       console.log('Connected to Redis successfully');
+      usingVercelKV = false;
       resolve(client);
     } catch (error) {
-      console.error('Failed to connect to Redis:', error);
+      console.error('Failed to initialize storage:', error);
+      client = null;
       connectionPromise = null;
       reject(error);
     }
@@ -77,12 +98,12 @@ async function initializeRedis() {
   return connectionPromise;
 }
 
-// KV-like interface for consistent usage
+// Normalize Redis API across different clients
 const storage = {
   async get(key) {
     try {
-      const redis = await initializeRedis();
-      return redis.get(key);
+      const storageClient = await initializeStorage();
+      return storageClient.get(key);
     } catch (error) {
       console.error(`Error getting key ${key}:`, error);
       throw error;
@@ -91,8 +112,10 @@ const storage = {
   
   async set(key, value) {
     try {
-      const redis = await initializeRedis();
-      return redis.set(key, typeof value === 'string' ? value : JSON.stringify(value));
+      const storageClient = await initializeStorage();
+      // Make sure value is a string
+      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      return storageClient.set(key, stringValue);
     } catch (error) {
       console.error(`Error setting key ${key}:`, error);
       throw error;
@@ -101,35 +124,62 @@ const storage = {
   
   async del(key) {
     try {
-      const redis = await initializeRedis();
-      return redis.del(key);
+      const storageClient = await initializeStorage();
+      // Vercel KV uses .del(), Redis client uses .del()
+      return storageClient.del(key);
     } catch (error) {
       console.error(`Error deleting key ${key}:`, error);
       throw error;
     }
   },
   
-  // Additional Redis operations as needed
   async keys(pattern) {
     try {
-      const redis = await initializeRedis();
-      return redis.keys(pattern);
+      const storageClient = await initializeStorage();
+      
+      if (usingVercelKV) {
+        // Vercel KV doesn't support pattern matching, only prefixes
+        // For simplicity, we'll just assume * means get all keys
+        // You can enhance this to handle more patterns if needed
+        if (pattern === '*') {
+          return storageClient.keys();
+        } else {
+          const prefix = pattern.replace(/\*$/, '');
+          return storageClient.keys({ prefix });
+        }
+      } else {
+        return storageClient.keys(pattern);
+      }
     } catch (error) {
       console.error(`Error listing keys with pattern ${pattern}:`, error);
-      throw error;
+      return [];
     }
   },
   
-  // Ping to check connection
   async ping() {
     try {
-      const redis = await initializeRedis();
-      const result = await redis.ping();
-      return result === 'PONG';
+      const storageClient = await initializeStorage();
+      
+      if (usingVercelKV) {
+        // Vercel KV doesn't have ping, so check if a simple operation works
+        await storageClient.get('__ping_test__');
+        return true;
+      } else {
+        const result = await storageClient.ping();
+        return result === 'PONG';
+      }
     } catch (error) {
-      console.error('Error pinging Redis:', error);
+      console.error('Error pinging storage:', error);
       return false;
     }
+  },
+  
+  // Returns information about the client type
+  getClientInfo() {
+    return {
+      type: usingVercelKV ? 'vercel-kv' : 'redis',
+      initialized: !!client
+    };
   }
 };
 
