@@ -7,10 +7,14 @@ let isConnected = false;
 async function initializeRedis() {
   if (!isConnected) {
     try {
-      // Use the environment variables exactly as provided by Upstash/Vercel
-      const redisUrl = process.env.KV_URL || process.env.REDIS_URL || 'redis://localhost:6379';
+      // Use the environment variables provided by Upstash/Vercel
+      const redisUrl = process.env.KV_URL || 'redis://localhost:6379';
       
-      console.log(`Connecting to Redis at ${redisUrl.split('@')[0]}...`);  // Hide credentials in logs
+      // Log connection without exposing credentials
+      const sanitizedUrl = redisUrl.includes('@') 
+        ? redisUrl.replace(/\/\/.*@/, '//***:***@') 
+        : redisUrl;
+      console.log(`Connecting to Redis at ${sanitizedUrl}...`);
       
       client = createClient({
         url: redisUrl,

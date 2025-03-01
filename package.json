@@ -17,6 +17,7 @@
     "process-prices": "node src/scripts/process-prices.js",
     "test-local": "node test-storage-flow.js",
     "test-vercel": "node vercel-test.js",
+    "test-redis": "node test-redis.js",
     "init-vercel": "node vercel-test.js --init"
   },
   "dependencies": {

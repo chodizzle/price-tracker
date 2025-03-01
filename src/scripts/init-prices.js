@@ -6,7 +6,6 @@ require('dotenv').config({ path: path.join(process.cwd(), '.env.local') });
 const { initializeEggPrices } = require('./init-egg-prices');
 const { initializeMilkPrices } = require('./init-milk-prices');
 const { initializeGasolinePrices } = require('./init-gasoline-prices');
-const { initializeEIAPrices } = require('./init-eia-prices');
 const { getPriceDataManager } = require('../lib/priceDataManager');
 const { processPrices } = require('./process-prices');
 
