@@ -66,7 +66,7 @@ const BasketTooltip = ({ active, payload, label }) => {
   );
 };
 
-const YearlyBasketChart = ({ data, commodityInfo, latest, baseline }) => {
+const YearlyBasketChart = ({ data, commodityInfo, latest, baseline, yearColors = { 2024: '#2563eb', 2025: '#8884d8' } }) => {
   const [groupedData, setGroupedData] = useState([]);
   const [hasData, setHasData] = useState(false);
 
@@ -76,33 +76,46 @@ const YearlyBasketChart = ({ data, commodityInfo, latest, baseline }) => {
       return;
     }
 
-    // Group data by month (0-11)
-    const monthlyData = Array(12).fill().map((_, i) => ({
-      month: i,
-      displayMonth: new Date(2024, i, 1).toLocaleDateString('en-US', { month: 'short' })
-    }));
-
-    // Add each year's data to the monthly groups
+    // Preserve weekly data but organize by year
+    const processedData = [];
+    
+    // Group data by date to ensure unique entries
+    const groupedByDate = {};
+    
+    // First, group all data points by their date (to handle duplicates)
     data.forEach(item => {
       if (item.date === '2024 Avg') return; // Skip the average
       
-      const year = getYear(item.date);
-      const month = getMonth(item.date);
+      // Use a formatted date as the key to preserve order in chart
+      const monthDay = formatMonthDay(item.date).split(',')[0]; // Just "Jan 15" without year
+      const dateKey = monthDay;
       
-      // Add the data point to the right month
-      if (monthlyData[month]) {
-        monthlyData[month][`basket${year}`] = item.basketPrice;
-        monthlyData[month][`displayDate${year}`] = formatMonthDay(item.date) + ', ' + year;
-        
-        // Save the detailed prices for the tooltip
-        if (item.prices) {
-          monthlyData[month][`priceDetails${year}`] = item.prices;
-        }
+      if (!groupedByDate[dateKey]) {
+        groupedByDate[dateKey] = {
+          displayDate: monthDay,
+          sortDate: new Date(item.date).setFullYear(2000), // Normalize year for sorting
+          basket2024: null,
+          basket2025: null,
+          priceDetails2024: null,
+          priceDetails2025: null
+        };
+      }
+      
+      const year = getYear(item.date);
+      groupedByDate[dateKey][`basket${year}`] = item.basketPrice;
+      groupedByDate[dateKey][`fullDate${year}`] = item.date;
+      
+      // Save the detailed prices for the tooltip
+      if (item.prices) {
+        groupedByDate[dateKey][`priceDetails${year}`] = item.prices;
       }
     });
-
-    setGroupedData(monthlyData.filter(m => m.basket2024 || m.basket2025));
-    setHasData(true);
+    
+    // Convert to array and sort by month/day (ignoring year)
+    const sortedData = Object.values(groupedByDate).sort((a, b) => a.sortDate - b.sortDate);
+    
+    setGroupedData(sortedData);
+    setHasData(sortedData.length > 0);
   }, [data]);
 
   if (!hasData) {
@@ -186,8 +199,10 @@ const YearlyBasketChart = ({ data, commodityInfo, latest, baseline }) => {
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
-                dataKey="displayMonth"
+                dataKey="displayDate"
                 tick={{ fontSize: 12 }}
+                interval="preserveStartEnd"
+                minTickGap={30}
               />
               <YAxis 
                 tickFormatter={(value) => `$${value.toFixed(2)}`}
@@ -202,7 +217,7 @@ const YearlyBasketChart = ({ data, commodityInfo, latest, baseline }) => {
                 type="monotone" 
                 dataKey="basket2024"
                 name="2024"
-                stroke="#2563eb"
+                stroke={yearColors[2024]}
                 strokeWidth={3}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}
@@ -214,7 +229,7 @@ const YearlyBasketChart = ({ data, commodityInfo, latest, baseline }) => {
                 type="monotone" 
                 dataKey="basket2025"
                 name="2025"
-                stroke="#8884d8"
+                stroke={yearColors[2025]}
                 strokeWidth={3}
                 dot={{ r: 4 }}
                 activeDot={{ r: 6 }}

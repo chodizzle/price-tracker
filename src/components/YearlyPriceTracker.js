@@ -25,6 +25,12 @@ const COMMODITY_CONFIG = {
   }
 };
 
+// Year colors - consistent for all charts
+const YEAR_COLORS = {
+  2024: '#2563eb',  // blue-600
+  2025: '#8884d8'   // purple
+};
+
 /**
  * Process the raw data from the API into our year-based format
  */
@@ -158,10 +164,11 @@ export default function YearlyPriceTracker() {
             commodityInfo={COMMODITY_CONFIG}
             latest={processedData.latestBasket}
             baseline={processedData.baselineBasket}
+            yearColors={YEAR_COLORS}
           />
           
           <div className="mt-8 mb-12 text-center text-sm text-gray-600 max-w-2xl mx-auto">
-            <p className="font-medium">The charts show a monthly comparison between 2024 and 2025 prices.</p>
+            <p className="font-medium">The charts show a weekly comparison between 2024 and 2025 prices.</p>
             <p className="mt-2">The basket is calculated using the latest price for each commodity. All prices are in US dollars.</p>
           </div>
 
@@ -178,6 +185,7 @@ export default function YearlyPriceTracker() {
                 data={processedData.commodityData[commodity]?.data || []}
                 latest={processedData.latestByChart[commodity] || null}
                 baseline={processedData.baselineByChart[commodity] || null}
+                yearColors={YEAR_COLORS}
               />
             ))}
           </div>
