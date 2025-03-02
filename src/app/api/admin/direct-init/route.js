@@ -2,8 +2,6 @@
 import { NextResponse } from 'next/server';
 import storage from '@/lib/storage';
 
-// Import initialization functions directly
-// This is a simpler version using direct imports instead of dynamic imports
 export async function POST(request) {
   try {
     // Check authorization
@@ -46,7 +44,7 @@ export async function POST(request) {
     
     console.log('Setting up initial data structure...');
     
-    // Initialize with empty price data
+    // Initialize with static price data
     const initialPriceData = {
       eggs: {
         metadata: {
@@ -127,7 +125,7 @@ export async function POST(request) {
       }
     };
     
-    // Set price data
+    // Set price data - use string to ensure proper saving
     console.log('Setting price_data...');
     await storage.set('price_data', JSON.stringify(initialPriceData));
     
@@ -200,19 +198,19 @@ export async function POST(request) {
       },
       alignedPrices: [
         {
-          commodity: 'eggs',
-          date: '2024 Avg',
-          adjDate: '2024 Avg',
-          price: 3.15,
-          minPrice: 3.15,
-          maxPrice: 3.15,
+          commodity: "gasoline_regular",
+          date: "2024 Avg",
+          adjDate: "2024 Avg",
+          price: 3.30,
+          minPrice: 3.30,
+          maxPrice: 3.30,
           isAggregated: false,
           priceCount: 1
         },
         {
-          commodity: 'milk',
-          date: '2024 Avg',
-          adjDate: '2024 Avg',
+          commodity: "milk",
+          date: "2024 Avg",
+          adjDate: "2024 Avg",
           price: 3.41,
           minPrice: 3.41,
           maxPrice: 3.41,
@@ -220,27 +218,27 @@ export async function POST(request) {
           priceCount: 1
         },
         {
-          commodity: 'gasoline_regular',
-          date: '2024 Avg',
-          adjDate: '2024 Avg',
-          price: 3.30,
-          minPrice: 3.30,
-          maxPrice: 3.30,
+          commodity: "eggs",
+          date: "2024 Avg",
+          adjDate: "2024 Avg",
+          price: 3.15,
+          minPrice: 3.15,
+          maxPrice: 3.15,
           isAggregated: false,
           priceCount: 1
         }
       ],
       basket: [
         {
-          date: '2024 Avg',
-          adjDate: '2024 Avg',
+          date: "2024 Avg",
+          adjDate: "2024 Avg",
           basketPrice: 9.86,
           prices: {
             eggs: 3.15,
             milk: 3.41,
             gasoline_regular: 3.30
           },
-          formattedDate: '2024 Avg',
+          formattedDate: "2024 Avg",
           isComplete: true
         }
       ],
@@ -248,21 +246,21 @@ export async function POST(request) {
         eggs: {
           data: [
             {
-              date: '2024 Avg',
-              adjDate: '2024 Avg',
+              date: "2024 Avg",
+              adjDate: "2024 Avg",
               price: 3.15,
               minPrice: 3.15,
               maxPrice: 3.15,
-              formattedDate: '2024 Avg'
+              formattedDate: "2024 Avg"
             }
           ],
           latest: {
-            date: '2024 Avg',
-            adjDate: '2024 Avg',
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
             price: 3.15,
             minPrice: 3.15,
             maxPrice: 3.15,
-            formattedDate: '2024 Avg'
+            formattedDate: "2024 Avg"
           },
           vsBaseline: {
             amount: 0,
@@ -272,21 +270,21 @@ export async function POST(request) {
         milk: {
           data: [
             {
-              date: '2024 Avg',
-              adjDate: '2024 Avg',
+              date: "2024 Avg",
+              adjDate: "2024 Avg",
               price: 3.41,
               minPrice: 3.41,
               maxPrice: 3.41,
-              formattedDate: '2024 Avg'
+              formattedDate: "2024 Avg"
             }
           ],
           latest: {
-            date: '2024 Avg',
-            adjDate: '2024 Avg',
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
             price: 3.41,
             minPrice: 3.41,
             maxPrice: 3.41,
-            formattedDate: '2024 Avg'
+            formattedDate: "2024 Avg"
           },
           vsBaseline: {
             amount: 0,
@@ -296,21 +294,21 @@ export async function POST(request) {
         gasoline_regular: {
           data: [
             {
-              date: '2024 Avg',
-              adjDate: '2024 Avg',
+              date: "2024 Avg",
+              adjDate: "2024 Avg",
               price: 3.30,
               minPrice: 3.30,
               maxPrice: 3.30,
-              formattedDate: '2024 Avg'
+              formattedDate: "2024 Avg"
             }
           ],
           latest: {
-            date: '2024 Avg',
-            adjDate: '2024 Avg',
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
             price: 3.30,
             minPrice: 3.30,
             maxPrice: 3.30,
-            formattedDate: '2024 Avg'
+            formattedDate: "2024 Avg"
           },
           vsBaseline: {
             amount: 0,
@@ -320,7 +318,7 @@ export async function POST(request) {
       }
     };
     
-    // Set combined price data
+    // Set combined price data - use string to ensure proper saving
     console.log('Setting combined_price_data...');
     await storage.set('combined_price_data', JSON.stringify(initialCombinedData));
     

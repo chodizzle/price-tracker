@@ -50,7 +50,22 @@ async function processPrices() {
       throw new Error('Raw price data not found in storage');
     }
     
-    const rawData = JSON.parse(rawDataStr);
+    // Safely parse the data, handling both string and object formats
+    let rawData;
+    try {
+      if (typeof rawDataStr === 'string') {
+        rawData = JSON.parse(rawDataStr);
+      } else if (typeof rawDataStr === 'object' && rawDataStr !== null) {
+        console.warn('Warning: price_data was already an object, not a string');
+        rawData = rawDataStr;
+      } else {
+        throw new Error(`Unexpected data type: ${typeof rawDataStr}`);
+      }
+    } catch (parseError) {
+      console.error('Error parsing raw price data:', parseError, 'Data was:', rawDataStr);
+      throw new Error(`Failed to parse price data: ${parseError.message}`);
+    }
+    
     console.log('Loaded raw price data with commodities:', Object.keys(rawData));
     
     // Define commodity quantities for basket
@@ -323,9 +338,14 @@ async function processPrices() {
       }
     }
     
-    // Write the processed data to storage
-    await storage.set('combined_price_data', JSON.stringify(processedData));
-    console.log('Processed data written to storage');
+    // Write the processed data to storage - make sure it's a string
+    try {
+      await storage.set('combined_price_data', JSON.stringify(processedData));
+      console.log('Processed data written to storage');
+    } catch (saveError) {
+      console.error('Error saving processed data:', saveError);
+      throw saveError;
+    }
     
     return processedData;
   } catch (error) {

@@ -1,6 +1,5 @@
-// src/lib/storage.js - Enhanced with better URL handling
+// src/lib/storage.js - Enhanced specifically for Upstash with Vercel
 const { createClient } = require('@vercel/kv');
-const { createClient: createRedisClient } = require('redis');
 
 // Track the client and connection status
 let client = null;
@@ -12,75 +11,42 @@ let connectionStatus = {
 };
 
 /**
- * Parse and convert Redis URL if needed
- * Vercel KV requires HTTPS REST URL while Redis client uses Redis protocol URL
+ * Get connection configuration
+ * Prioritizing Upstash REST API URL and token
  */
 function getConnectionDetails() {
-  // Get all possible connection configurations
-  const kvUrl = process.env.KV_URL;
-  const kvRestApiUrl = process.env.KV_REST_API_URL;
-  const kvRestApiToken = process.env.KV_REST_API_TOKEN;
-  const redisUrl = process.env.REDIS_URL;
+  // Get Upstash REST API connection variables
+  const restApiUrl = process.env.KV_REST_API_URL;
+  const restApiToken = process.env.KV_REST_API_TOKEN;
   
-  // Return connection config based on available variables
-  if (kvRestApiUrl && kvRestApiToken) {
-    // Preferred: Use REST API directly
+  // Check for Upstash REST API configuration (preferred for Vercel)
+  if (restApiUrl && restApiToken) {
     return {
-      useVercelKv: true,
       config: {
-        url: kvRestApiUrl,
-        token: kvRestApiToken
-      }
-    };
-  } else if (kvUrl && kvUrl.startsWith('https://')) {
-    // If KV_URL is already in HTTPS format, use it directly
-    return {
-      useVercelKv: true,
-      config: {
-        url: kvUrl
-      }
-    };
-  } else if (kvUrl && (kvUrl.startsWith('redis://') || kvUrl.startsWith('rediss://'))) {
-    // If KV_URL is in Redis protocol format but we need Vercel KV REST API
-    // Extract the host and token from the Redis URL
-    try {
-      // Parse Redis URL to get host and password parts
-      const match = kvUrl.match(/rediss?:\/\/default:([^@]+)@([^:]+):(\d+)/);
-      if (match) {
-        const [, password, host, port] = match;
-        // Construct the HTTPS URL for Vercel KV
-        const restUrl = `https://${host}/redis/${password}`;
-        
-        console.log(`Converted Redis URL to REST API URL format`);
-        return {
-          useVercelKv: true,
-          config: {
-            url: restUrl
-          }
-        };
-      }
-    } catch (error) {
-      console.error('Error parsing Redis URL:', error);
-    }
-  }
-  
-  // Fallback: If we have a Redis URL, use the standard Redis client
-  if (redisUrl || kvUrl) {
-    return {
-      useVercelKv: false,
-      config: {
-        url: redisUrl || kvUrl
-      }
+        url: restApiUrl,
+        token: restApiToken
+      },
+      type: 'upstash-rest'
     };
   }
   
-  // Final fallback: We don't have any valid connection details
+  // Fallback to KV_URL if present (but log a warning)
+  if (process.env.KV_URL) {
+    console.warn('Using KV_URL instead of KV_REST_API_URL and KV_REST_API_TOKEN. ' +
+                'For Upstash with Vercel, it is recommended to use the REST API configuration.');
+    
+    return {
+      config: {
+        url: process.env.KV_URL
+      },
+      type: 'kv-url'
+    };
+  }
+  
+  // No valid configuration
   return {
-    useVercelKv: true,
-    config: {
-      url: kvUrl || kvRestApiUrl,
-      token: kvRestApiToken
-    }
+    config: {},
+    type: 'none'
   };
 }
 
@@ -102,64 +68,28 @@ async function initializeStorage() {
   try {
     // Check if we have the minimal required configuration
     if (!connection.config.url) {
-      throw new Error('No KV URL configuration found. Set KV_URL or KV_REST_API_URL environment variable.');
+      throw new Error('No KV configuration found. Set KV_REST_API_URL and KV_REST_API_TOKEN environment variables.');
     }
     
     // Log connection type (without sensitive details)
-    console.log('KV connection type:', {
-      useVercelKv: connection.useVercelKv,
-      urlType: connection.config.url.startsWith('https') ? 'HTTPS' : 'Redis',
-      hasToken: !!connection.config.token,
-      environment: process.env.NODE_ENV
-    });
+    console.log('KV connection type:', connection.type);
     
-    // Create client based on connection type
-    if (connection.useVercelKv) {
-      console.log('Using Vercel KV client');
-      client = createClient(connection.config);
-      
-      // Test a simple operation to verify connection
-      try {
-        const pingResult = await client.get('__ping_test__');
-        console.log('Vercel KV ping result:', pingResult !== undefined);
-        
-        connectionStatus.initialized = true;
-        connectionStatus.connected = true;
-        connectionStatus.lastError = null;
-        console.log('KV storage connection successful');
-        
-        return client;
-      } catch (pingError) {
-        throw new Error(`Vercel KV connection test failed: ${pingError.message}`);
-      }
-    } else {
-      console.log('Using standard Redis client');
-      // Use standard Redis client for Redis protocol URLs
-      client = createRedisClient({
-        url: connection.config.url,
-        socket: {
-          reconnectStrategy: (retries) => {
-            console.log(`Redis reconnect attempt ${retries}`);
-            return Math.min(retries * 100, 10000);
-          }
-        }
-      });
-      
-      // Connect to Redis
-      await client.connect();
-      
-      // Test connection
-      const pingResult = await client.ping();
-      if (pingResult !== 'PONG') {
-        throw new Error('Redis ping failed');
-      }
+    // Create Vercel KV client
+    client = createClient(connection.config);
+    
+    // Test a simple operation to verify connection
+    try {
+      const pingResult = await client.get('__ping_test__');
+      console.log('Vercel KV ping result:', pingResult !== undefined);
       
       connectionStatus.initialized = true;
       connectionStatus.connected = true;
       connectionStatus.lastError = null;
-      console.log('Redis connection successful');
+      console.log('KV storage connection successful');
       
       return client;
+    } catch (pingError) {
+      throw new Error(`Vercel KV connection test failed: ${pingError.message}`);
     }
   } catch (error) {
     connectionStatus.lastError = {
@@ -182,7 +112,20 @@ const storage = {
   async get(key) {
     try {
       const storageClient = await initializeStorage();
-      return await storageClient.get(key);
+      const result = await storageClient.get(key);
+      
+      // If result is undefined or null, return null consistently
+      if (result === undefined || result === null) {
+        return null;
+      }
+      
+      // If the result is already an object (not a string), convert it to string
+      if (typeof result === 'object' && result !== null) {
+        console.log(`Warning: KV returned an object for key ${key}, stringifying`);
+        return JSON.stringify(result);
+      }
+      
+      return result;
     } catch (error) {
       console.error(`Error getting key ${key}:`, error);
       throw error;
@@ -248,14 +191,13 @@ const storage = {
   
   // Get connection status information
   getStatus() {
+    const connection = getConnectionDetails();
     return {
       ...connectionStatus,
       clientInitialized: !!client,
       connectionConfig: {
-        useVercelKv: getConnectionDetails().useVercelKv,
-        urlType: process.env.KV_URL?.startsWith('https') ? 'HTTPS' : 
-                 process.env.KV_URL?.startsWith('redis') ? 'Redis' : 
-                 process.env.KV_REST_API_URL ? 'REST API' : 'Unknown'
+        type: connection.type,
+        hasToken: !!connection.config.token
       }
     };
   }

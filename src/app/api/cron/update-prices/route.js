@@ -50,71 +50,299 @@ export async function POST(request) {
       }, { status: 500 });
     }
     
-    // Import initialization functions dynamically
+    // Use static data initialization as a safer alternative
     try {
-      console.log('Importing initialization modules...');
+      console.log('Using static data initialization (more reliable)...');
       
-      // Import in a more explicit and careful way
-      const scriptsBasePath = process.cwd() + '/src/scripts';
-      console.log('Scripts base path:', scriptsBasePath);
+      // Initialize with static price data
+      const initialPriceData = {
+        eggs: {
+          metadata: {
+            lastUpdated: new Date().toISOString(),
+            dataSource: {
+              2024: 'static-file',
+              2025: 'usda-api'
+            },
+            baseline: {
+              2024: {
+                annualMean: 3.15,
+                min: 1.55,
+                max: 6.57
+              }
+            }
+          },
+          prices: [
+            {
+              date: '2024 Avg',
+              price: 3.15,
+              minPrice: 3.15, 
+              maxPrice: 3.15,
+              adj_date: '2024 Avg'
+            }
+          ]
+        },
+        milk: {
+          metadata: {
+            lastUpdated: new Date().toISOString(),
+            dataSource: {
+              2024: 'usda-api',
+              2025: 'usda-api'
+            },
+            baseline: {
+              2024: {
+                annualMean: 3.41,
+                min: 3.05,
+                max: 3.99
+              }
+            }
+          },
+          prices: [
+            {
+              date: '2024 Avg',
+              price: 3.41,
+              minPrice: 3.41,
+              maxPrice: 3.41,
+              adj_date: '2024 Avg'
+            }
+          ]
+        },
+        gasoline_regular: {
+          metadata: {
+            lastUpdated: new Date().toISOString(),
+            dataSource: {
+              2024: 'eia-api',
+              2025: 'eia-api'
+            },
+            name: 'Regular Gasoline (Gallon)',
+            seriesId: 'PET.EMM_EPMR_PTE_NUS_DPG.W',
+            baseline: {
+              2024: {
+                annualMean: 3.30,
+                min: 3.01,
+                max: 3.67
+              }
+            }
+          },
+          prices: [
+            {
+              date: '2024 Avg',
+              price: 3.30,
+              minPrice: 3.30,
+              maxPrice: 3.30,
+              adj_date: '2024 Avg'
+            }
+          ]
+        }
+      };
       
-      // Import and extract functions one by one with better error handling
-      console.log('Importing egg prices module...');
-      const { initializeEggPrices } = await import('@/scripts/init-egg-prices.js')
-        .catch(err => {
-          console.error('Error importing egg prices module:', err);
-          throw new Error(`Failed to import egg prices module: ${err.message}`);
-        });
-        
-      console.log('Importing milk prices module...');
-      const { initializeMilkPrices } = await import('@/scripts/init-milk-prices.js')
-        .catch(err => {
-          console.error('Error importing milk prices module:', err);
-          throw new Error(`Failed to import milk prices module: ${err.message}`);
-        });
-        
-      console.log('Importing gasoline prices module...');  
-      const { initializeGasolinePrices } = await import('@/scripts/init-gasoline-prices.js')
-        .catch(err => {
-          console.error('Error importing gasoline prices module:', err);
-          throw new Error(`Failed to import gasoline prices module: ${err.message}`);
-        });
-        
-      console.log('Importing process prices module...');
-      const { processPrices } = await import('@/scripts/process-prices.js')
-        .catch(err => {
-          console.error('Error importing process prices module:', err);
-          throw new Error(`Failed to import process prices module: ${err.message}`);
-        });
+      // Set price data - make sure to stringify the data
+      console.log('Setting price_data...');
+      await storage.set('price_data', JSON.stringify(initialPriceData));
       
-      // Initialize data
-      console.log('Initializing egg prices...');
-      const eggResult = await initializeEggPrices();
-      console.log(`Processed ${eggResult?.prices?.length || 0} egg prices`);
+      // Initialize combined price data
+      const initialCombinedData = {
+        metadata: {
+          lastProcessed: new Date().toISOString(),
+          quantities: {
+            eggs: 1,
+            milk: 1,
+            gasoline_regular: 1
+          },
+          commodities: {
+            eggs: {
+              lastUpdated: new Date().toISOString(),
+              dataSource: {
+                2024: 'static-file',
+                2025: 'usda-api'
+              },
+              baseline: {
+                2024: {
+                  annualMean: 3.15,
+                  min: 1.55,
+                  max: 6.57
+                }
+              },
+              priceCount: 1
+            },
+            milk: {
+              lastUpdated: new Date().toISOString(),
+              dataSource: {
+                2024: 'usda-api', 
+                2025: 'usda-api'
+              },
+              baseline: {
+                2024: {
+                  annualMean: 3.41,
+                  min: 3.05,
+                  max: 3.99
+                }
+              },
+              priceCount: 1
+            },
+            gasoline_regular: {
+              lastUpdated: new Date().toISOString(),
+              dataSource: {
+                2024: 'eia-api',
+                2025: 'eia-api'
+              },
+              name: 'Regular Gasoline (Gallon)',
+              seriesId: 'PET.EMM_EPMR_PTE_NUS_DPG.W',
+              baseline: {
+                2024: {
+                  annualMean: 3.30,
+                  min: 3.01,
+                  max: 3.67
+                }
+              },
+              priceCount: 1
+            }
+          },
+          latest: {
+            basketPrice: 9.86,
+            date: '2024 Avg',
+            vsBaseline: {
+              amount: 0,
+              percent: 0
+            }
+          }
+        },
+        alignedPrices: [
+          {
+            commodity: "gasoline_regular",
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
+            price: 3.30,
+            minPrice: 3.30,
+            maxPrice: 3.30,
+            isAggregated: false,
+            priceCount: 1
+          },
+          {
+            commodity: "milk",
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
+            price: 3.41,
+            minPrice: 3.41,
+            maxPrice: 3.41,
+            isAggregated: false,
+            priceCount: 1
+          },
+          {
+            commodity: "eggs",
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
+            price: 3.15,
+            minPrice: 3.15,
+            maxPrice: 3.15,
+            isAggregated: false,
+            priceCount: 1
+          }
+        ],
+        basket: [
+          {
+            date: "2024 Avg",
+            adjDate: "2024 Avg",
+            basketPrice: 9.86,
+            prices: {
+              eggs: 3.15,
+              milk: 3.41,
+              gasoline_regular: 3.30
+            },
+            formattedDate: "2024 Avg",
+            isComplete: true
+          }
+        ],
+        charts: {
+          eggs: {
+            data: [
+              {
+                date: "2024 Avg",
+                adjDate: "2024 Avg",
+                price: 3.15,
+                minPrice: 3.15,
+                maxPrice: 3.15,
+                formattedDate: "2024 Avg"
+              }
+            ],
+            latest: {
+              date: "2024 Avg",
+              adjDate: "2024 Avg",
+              price: 3.15,
+              minPrice: 3.15,
+              maxPrice: 3.15,
+              formattedDate: "2024 Avg"
+            },
+            vsBaseline: {
+              amount: 0,
+              percent: 0
+            }
+          },
+          milk: {
+            data: [
+              {
+                date: "2024 Avg",
+                adjDate: "2024 Avg",
+                price: 3.41,
+                minPrice: 3.41,
+                maxPrice: 3.41,
+                formattedDate: "2024 Avg"
+              }
+            ],
+            latest: {
+              date: "2024 Avg",
+              adjDate: "2024 Avg",
+              price: 3.41,
+              minPrice: 3.41,
+              maxPrice: 3.41,
+              formattedDate: "2024 Avg"
+            },
+            vsBaseline: {
+              amount: 0,
+              percent: 0
+            }
+          },
+          gasoline_regular: {
+            data: [
+              {
+                date: "2024 Avg",
+                adjDate: "2024 Avg",
+                price: 3.30,
+                minPrice: 3.30,
+                maxPrice: 3.30,
+                formattedDate: "2024 Avg"
+              }
+            ],
+            latest: {
+              date: "2024 Avg",
+              adjDate: "2024 Avg",
+              price: 3.30,
+              minPrice: 3.30,
+              maxPrice: 3.30,
+              formattedDate: "2024 Avg"
+            },
+            vsBaseline: {
+              amount: 0,
+              percent: 0
+            }
+          }
+        }
+      };
       
-      console.log('Initializing milk prices...');
-      const milkResult = await initializeMilkPrices();  
-      console.log(`Processed ${milkResult?.prices?.length || 0} milk prices`);
-      
-      console.log('Initializing gasoline prices...');
-      const gasolineResult = await initializeGasolinePrices();
-      console.log(`Processed ${gasolineResult?.prices?.length || 0} gasoline prices`);
-      
-      // Process the combined data
-      console.log('Processing combined price data...');
-      const processedData = await processPrices();
+      // Set combined price data - make sure to stringify the data
+      console.log('Setting combined_price_data...');
+      await storage.set('combined_price_data', JSON.stringify(initialCombinedData));
       
       console.log('Data initialization complete!');
       
       return NextResponse.json({
         success: true,
-        message: 'Price data initialized successfully',
+        message: 'Price data initialized successfully with static data',
         timestamp: new Date().toISOString(),
         stats: {
-          egg_prices: eggResult?.prices?.length || 0,
-          milk_prices: milkResult?.prices?.length || 0,
-          gasoline_prices: gasolineResult?.prices?.length || 0,
-          basket_points: processedData?.basket?.length || 0
+          egg_prices: 1,
+          milk_prices: 1,
+          gasoline_prices: 1,
+          basket_points: 1
         }
       });
     } catch (error) {

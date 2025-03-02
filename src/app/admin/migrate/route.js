@@ -28,12 +28,16 @@ export async function POST(request) {
     }
     
     // Parse request body to get connection details
-    let requestBody;
+    let requestBody = {};
     try {
-      requestBody = await request.json();
+      const bodyText = await request.text();
+      // Only parse if body isn't empty
+      if (bodyText && bodyText.trim()) {
+        requestBody = JSON.parse(bodyText);
+      }
     } catch (error) {
-      // If no body provided, use defaults from query params or env vars
-      requestBody = {};
+      console.log('Request body parsing error:', error.message);
+      // Continue with empty request body
     }
     
     const { url, restUrl, token } = requestBody;
@@ -107,6 +111,8 @@ export async function POST(request) {
         });
         const index = results.length - 1;
         
+        console.log(`Testing connection option: ${option.name}`);
+        
         // Create client with this config
         const client = createClient(option.config);
         
@@ -115,6 +121,8 @@ export async function POST(request) {
         await client.set(testKey, 'test-value');
         const value = await client.get(testKey);
         await client.del(testKey);
+        
+        console.log(`Connection test result for ${option.name}:`, value);
         
         if (value === 'test-value') {
           results[index].status = 'success';
@@ -126,6 +134,7 @@ export async function POST(request) {
           results[index].error = 'Test value didn\'t match expected value';
         }
       } catch (error) {
+        console.error(`Connection test failed for ${option.name}:`, error);
         if (results.length > 0) {
           const lastResult = results[results.length - 1];
           lastResult.status = 'error';
@@ -195,6 +204,7 @@ export async function POST(request) {
           results
         });
       } catch (error) {
+        console.error('Data initialization error:', error);
         return NextResponse.json({
           success: false,
           error: `Data initialization failed: ${error.message}`,
