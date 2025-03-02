@@ -200,7 +200,7 @@ function BasketChart({ data, quantities }) {
     return (
       <Card className="h-full mb-6">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Weekly Grocery Basket</CardTitle>
+          <CardTitle className="text-lg">Basket of Goods</CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
           <div className="text-center py-8 text-gray-500">
@@ -223,7 +223,7 @@ function BasketChart({ data, quantities }) {
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex justify-between">
           <div className="flex items-center">
-            <span className="text-xl">Weekly Grocery Basket</span>
+            <span className="text-xl">Basket of Goods</span>
             <span className="text-sm text-gray-500 ml-2">
               ({Object.entries(quantities).map(([name, qty], index) => 
                 `${index > 0 ? ' + ' : ''}${qty} ${COMMODITY_CONFIG[name]?.name?.toLowerCase() || name}`
@@ -435,7 +435,7 @@ useEffect(() => {
           
           <div className="mt-8 mb-12 text-center text-sm text-gray-600 max-w-2xl mx-auto">
             <p className="font-medium">&quot;2024 Avg&quot; represents the annual average price for 2024.</p>
-            <p className="mt-2">Prices are aligned to Fridays for consistent comparison. The basket total is the sum of individual item prices for a basic weekly grocery purchase.</p>
+            <p className="mt-2">Prices are calculated using each commodity&apos;s latest price. The basket total is the sum of individual item prices for a basic weekly grocery purchase.</p>
             <p className="mt-2">Scroll down to see individual commodity price trends.</p>
           </div>
 

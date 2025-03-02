@@ -6,8 +6,8 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col p-4 md:p-8">
       <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-2 text-center">Commodity Price Tracker</h1>
-        <p className="text-center text-gray-600">Track prices of agricultural and energy commodities</p>
+        <h1 className="text-3xl md:text-4xl font-bold mb-2 text-center">Trumpflation.info</h1>
+        <p className="text-center text-gray-600">It&apos;s just data, broh</p>
       </header>
       
       <div className="flex-grow max-w-7xl w-full mx-auto">
