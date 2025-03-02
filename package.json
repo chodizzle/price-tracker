@@ -16,6 +16,7 @@
     "update-gasoline": "node src/scripts/init-prices.js update-gasoline",
     "process-prices": "node src/scripts/process-prices.js",
     "test-local": "node test-storage-flow.js",
+    "check-and-update-milk": "node check-and-update-milk.js",
     "test-vercel": "node vercel-test.js",
     "test-redis": "node test-redis.js",
     "check-api": "node check-api.js",

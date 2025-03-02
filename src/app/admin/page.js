@@ -203,6 +203,88 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+
+  // CheckUpdatesView component state and functions
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [updateError, setUpdateError] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
+
+  // Check for updates
+  const checkForUpdates = async () => {
+    if (!secretKey) {
+      setUpdateError('Please enter the admin secret key first');
+      return;
+    }
+
+    try {
+      setUpdateLoading(true);
+      setUpdateError(null);
+      
+      const response = await fetch('/api/admin/check-updates', {
+        headers: {
+          'Authorization': `Bearer ${secretKey}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setUpdateInfo(data);
+      } else {
+        throw new Error(data.error || 'Failed to check for updates');
+      }
+    } catch (err) {
+      console.error('Error checking for updates:', err);
+      setUpdateError(err.message);
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
+  // Force an update
+  const forceUpdate = async () => {
+    if (!secretKey) {
+      setUpdateError('Please enter the admin secret key first');
+      return;
+    }
+
+    try {
+      setUpdateLoading(true);
+      setUpdateError(null);
+      
+      const response = await fetch('/api/cron/update-prices', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${secretKey}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setUpdateInfo({
+          ...updateInfo,
+          updatePerformed: true,
+          updateResult: data
+        });
+      } else {
+        throw new Error(data.error || 'Failed to perform update');
+      }
+    } catch (err) {
+      console.error('Error performing update:', err);
+      setUpdateError(err.message);
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
   
   return (
     <main className="flex min-h-screen flex-col p-6">
@@ -302,7 +384,7 @@ export default function AdminPage() {
         </Card>
         
         {/* Initialization Card */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Initialize Price Data</CardTitle>
           </CardHeader>
@@ -444,6 +526,93 @@ export default function AdminPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Check for Updates Card */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              <span>Check for Available Updates</span>
+              <div className="flex gap-2">
+                <button 
+                  onClick={checkForUpdates}
+                  disabled={updateLoading || loading}
+                  className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-400"
+                >
+                  {updateLoading ? 'Loading...' : 'Check for Updates'}
+                </button>
+                {updateInfo?.updateRecommendation && (
+                  <button 
+                    onClick={forceUpdate}
+                    disabled={updateLoading || loading}
+                    className="px-3 py-1 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
+                  >
+                    Force Update Now
+                  </button>
+                )}
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {updateError && (
+              <div className="p-3 bg-red-100 text-red-700 rounded mb-4">
+                {updateError}
+              </div>
+            )}
+            
+            {updateInfo && (
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500">
+                  Last checked: {new Date(updateInfo.timestamp).toLocaleString()}
+                </p>
+                
+                {updateInfo.updatePerformed && (
+                  <div className="p-3 bg-green-100 text-green-700 rounded mb-4">
+                    <p className="font-medium">Update successfully performed!</p>
+                    {updateInfo.updateResult?.stats && (
+                      <ul className="list-disc ml-5 mt-2 text-sm">
+                        {Object.entries(updateInfo.updateResult.stats).map(([key, value]) => (
+                          <li key={key}>{key}: {value}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {Object.entries(updateInfo.latestDates || {}).map(([commodity, date]) => (
+                    <div key={commodity} className="border rounded-lg p-4">
+                      <h3 className="font-bold text-lg mb-2">{commodity}</h3>
+                      <div className="space-y-1 text-sm">
+                        <p><span className="font-medium">Latest Date:</span> {new Date(date).toLocaleDateString()}</p>
+                        <p className={updateInfo.dataAges[commodity] > 7 ? "text-orange-600 font-medium" : ""}>
+                          <span className="font-medium">Age:</span> {updateInfo.dataAges[commodity]} days old
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                {updateInfo.updateRecommendation && (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                    <h3 className="font-medium text-yellow-800">{updateInfo.updateRecommendation.message}</h3>
+                    <ul className="list-disc ml-5 mt-2 text-sm">
+                      {updateInfo.updateRecommendation.recommendations.map((rec, index) => (
+                        <li key={index} className="text-yellow-700">{rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {!updateInfo && !updateLoading && (
+              <div className="text-center py-10 text-gray-500">
+                Click the button to check for available updates
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
       </div>
     </main>
   );

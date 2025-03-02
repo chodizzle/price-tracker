@@ -1,38 +1,36 @@
-// manual-init.js
-require('dotenv').config({ path: '.env.local' });
-const fetch = require('node-fetch');
+// Modify this section in src/scripts/process-prices.js
+// Look for the section that creates the basket data and modify it
 
-async function manualInitialize() {
-  const VERCEL_URL = process.env.VERCEL_URL || 'https://your-deployment-url.vercel.app';
-  const CRON_SECRET = process.env.CRON_SECRET;
-
-  if (!CRON_SECRET) {
-    console.error('CRON_SECRET is not set');
-    process.exit(1);
-  }
-
-  try {
-    console.log('Attempting to initialize prices...');
-    const response = await fetch(`${VERCEL_URL}/api/cron/update-prices`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CRON_SECRET}`,
-        'Content-Type': 'application/json'
-      }
+// Process regular data points
+sortedDates.forEach(adjDate => {
+  if (adjDate === '2024 Avg') return; // Skip baseline, already handled
+  
+  // Get prices for all commodities on this date
+  const dateData = {};
+  Object.keys(rawData).forEach(commodity => {
+    const aligned = processedData.alignedPrices.find(p => 
+      p.commodity === commodity && p.adjDate === adjDate
+    );
+    dateData[commodity] = aligned ? aligned.price : null;
+  });
+  
+  // Calculate basket price - MODIFIED: Allow partial baskets
+  const basketPrice = calculateBasketPrice(dateData, quantities);
+  
+  if (basketPrice !== null) {
+    // Count how many commodities have data
+    const availableCommodities = Object.keys(quantities).filter(c => dateData[c] !== null).length;
+    const totalCommodities = Object.keys(quantities).length;
+    
+    processedData.basket.push({
+      date: adjDate, // Use adjusted date as the main date
+      adjDate,
+      basketPrice,
+      prices: { ...dateData }, // Copy of all commodity prices
+      formattedDate: formatDate(adjDate),
+      isComplete: Object.keys(quantities).every(c => dateData[c] !== null),
+      commoditiesAvailable: availableCommodities,
+      totalCommodities: totalCommodities
     });
-
-    const result = await response.json();
-    console.log('Initialization result:', JSON.stringify(result, null, 2));
-
-    if (!result.success) {
-      throw new Error(result.error || 'Initialization failed');
-    }
-
-    console.log('Price data initialized successfully!');
-  } catch (error) {
-    console.error('Initialization error:', error);
-    process.exit(1);
   }
-}
-
-manualInitialize();
+});

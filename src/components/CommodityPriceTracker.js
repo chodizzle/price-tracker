@@ -322,77 +322,26 @@ export default function CommodityPriceTracker() {
     fetchData();
   }, []);
 
-  // Process data to ensure all commodities are present in latest data point
-  useEffect(() => {
-    if (priceData) {
-      try {
-        // Verify the price data structure
-        if (!priceData.basket || !Array.isArray(priceData.basket) || 
-            !priceData.charts || typeof priceData.charts !== 'object') {
-          console.error('Invalid price data structure:', priceData);
-          setError('Invalid data structure received from API');
-          return;
-        }
-        
-        // Find data points where all required commodities have data
-        const requiredCommodities = ['eggs', 'milk', 'gasoline_regular'];
-        
-        // Filter the basket data to only include complete data points
-        const filteredBasket = priceData.basket.filter(item => {
-          // Keep the 2024 Avg data point regardless
-          if (item.adjDate === '2024 Avg') return true;
-          
-          // Check if the item has a prices object
-          if (!item.prices || typeof item.prices !== 'object') return false;
-          
-          // Check if all required commodities have data
-          return requiredCommodities.every(commodity => 
-            item.prices[commodity] !== undefined && 
-            item.prices[commodity] !== null
-          );
-        });
-        
-        // Only use data up to the most recent complete data point
-        const lastCompleteIndex = filteredBasket.length - 1;
-        
-        // Filter the individual commodity data to match the filtered basket date range
-        const filterDate = lastCompleteIndex >= 0 ? filteredBasket[lastCompleteIndex].adjDate : null;
-        
-        const filteredCharts = {};
-        Object.keys(priceData.charts).forEach(commodity => {
-          // Make sure the chart data is valid
-          if (!priceData.charts[commodity] || !Array.isArray(priceData.charts[commodity].data)) {
-            filteredCharts[commodity] = { data: [], latest: null };
-            return;
-          }
-          
-          // Include all data points up to the latest complete date
-          filteredCharts[commodity] = {
-            ...priceData.charts[commodity],
-            data: priceData.charts[commodity].data.filter(item => {
-              // Keep the 2024 Avg data point
-              if (item.adjDate === '2024 Avg') return true;
-              // Keep data points up to the latest complete date
-              return filterDate ? new Date(item.adjDate) <= new Date(filterDate) : false;
-            }),
-            // Update latest to reflect the filtered data
-            latest: priceData.charts[commodity].data.find(item => 
-              filterDate && item.adjDate === filterDate) || 
-              priceData.charts[commodity].latest
-          };
-        });
-        
-        setFilteredData({
-          ...priceData,
-          basket: filteredBasket,
-          charts: filteredCharts
-        });
-      } catch (err) {
-        console.error('Error filtering price data:', err);
-        setError('Error processing data: ' + err.message);
-      }
+ // Process data to ensure all commodities are present in latest data point
+useEffect(() => {
+  if (priceData) {
+    // MODIFIED: Show all available data points, don't require all commodities
+    const filteredBasket = priceData.basket;
+    
+    // Include a note about incomplete data points in the latest data
+    const incompleteDataPoints = filteredBasket.filter(item => !item.isComplete);
+    if (incompleteDataPoints.length > 0) {
+      console.log(`Note: ${incompleteDataPoints.length} data points have incomplete commodity data`);
     }
-  }, [priceData]);
+    
+    // Use all commodity data regardless of completeness
+    setFilteredData({
+      ...priceData,
+      basket: filteredBasket,
+      charts: priceData.charts // Keep all chart data
+    });
+  }
+}, [priceData]);
 
   // Fetch price data from API
   const fetchData = async () => {
