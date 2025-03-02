@@ -1,6 +1,6 @@
 'use client';
 
-import CommodityPriceTracker from '../components/CommodityPriceTracker';
+import YearlyPriceTracker from '../components/YearlyPriceTracker';
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
       </header>
       
       <div className="flex-grow max-w-7xl w-full mx-auto">
-        <CommodityPriceTracker />
+        <YearlyPriceTracker />
       </div>
       
       <footer className="mt-16 pb-8 text-center text-gray-500 text-sm">

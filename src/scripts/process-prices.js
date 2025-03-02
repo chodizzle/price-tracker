@@ -1,6 +1,5 @@
 // src/scripts/process-prices.js
 const storage = require('../lib/storage');
-const { getNearestFriday, isFriday } = require('../lib/utils');
 
 /**
  * Format a date for friendly display
@@ -13,16 +12,16 @@ function formatDate(dateStr) {
 }
 
 /**
- * Calculate the basket price as a straight sum of items
- * @param {Object} pricesByDate - Map of prices indexed by date
+ * Calculate the basket price using the latest price for each commodity
+ * @param {Object} prices - Map of commodities to their latest prices
  * @param {Object} quantities - Commodity quantities
  * @returns {number} The total basket price
  */
-function calculateBasketPrice(pricesByDate, quantities) {
+function calculateBasketPrice(prices, quantities) {
   let totalPrice = 0;
   let itemCount = 0;
   
-  Object.entries(pricesByDate).forEach(([commodity, price]) => {
+  Object.entries(prices).forEach(([commodity, price]) => {
     const quantity = quantities[commodity] || 0;
     if (quantity > 0 && price !== null && price !== undefined) {
       totalPrice += price * quantity;
@@ -38,7 +37,7 @@ function calculateBasketPrice(pricesByDate, quantities) {
 }
 
 /**
- * Process the raw price data to create a combined dataset
+ * Process the raw price data to create a combined dataset without nearest-Friday adjustment
  */
 async function processPrices() {
   try {
@@ -79,7 +78,7 @@ async function processPrices() {
     };
   
     
-    // Create processed data structure - Make sure charts is initialized here
+    // Create processed data structure with charts initialized
     const processedData = {
       metadata: {
         lastProcessed: new Date().toISOString(),
@@ -88,10 +87,10 @@ async function processPrices() {
       },
       alignedPrices: [],
       basket: [],
-      charts: {}  // Initialize charts object here
+      charts: {}
     };
     
-    // Track all unique adjusted dates
+    // Track all unique dates (no adjustment)
     const allDates = new Set();
     
     // Process each commodity's data
@@ -112,32 +111,25 @@ async function processPrices() {
         priceCount: commodityData.prices.length
       };
       
-      // Group prices by adjusted date
-      const pricesByAdjDate = new Map();
+      // Group prices by actual date (no adjustment)
+      const pricesByDate = new Map();
       
       commodityData.prices.forEach(price => {
-        // Use existing adj_date if available, otherwise calculate it
-        const adjDate = price.adj_date || getNearestFriday(price.date);
-        
-        // Only process 2025 data for weekly prices (keep 2024 Avg)
-        if (!price.date.startsWith('2025') && price.date !== '2024 Avg') {
-          return;
-        }
+        const actualDate = price.date;
         
         // Track all unique dates
-        allDates.add(adjDate);
+        allDates.add(actualDate);
         
-        // Group by adjusted date
-        if (pricesByAdjDate.has(adjDate)) {
-          const group = pricesByAdjDate.get(adjDate);
+        // Group by date
+        if (pricesByDate.has(actualDate)) {
+          const group = pricesByDate.get(actualDate);
           group.prices.push(price);
           group.totalPrice += price.price;
           group.minPrice = Math.min(group.minPrice, price.minPrice || price.price);
           group.maxPrice = Math.max(group.maxPrice, price.maxPrice || price.price);
         } else {
-          pricesByAdjDate.set(adjDate, {
-            date: price.date,
-            adjDate,
+          pricesByDate.set(actualDate, {
+            date: actualDate,
             prices: [price],
             totalPrice: price.price,
             minPrice: price.minPrice || price.price,
@@ -147,14 +139,13 @@ async function processPrices() {
       });
       
       // Calculate averages for groups with multiple prices
-      pricesByAdjDate.forEach((group, adjDate) => {
+      pricesByDate.forEach((group, date) => {
         const avgPrice = group.totalPrice / group.prices.length;
         
         // Add to aligned prices
         processedData.alignedPrices.push({
           commodity,
           date: group.date,
-          adjDate,
           price: avgPrice,
           minPrice: group.minPrice,
           maxPrice: group.maxPrice,
@@ -162,9 +153,16 @@ async function processPrices() {
           priceCount: group.prices.length
         });
       });
+      
+      // Initialize chart data for this commodity
+      if (!processedData.charts[commodity]) {
+        processedData.charts[commodity] = {
+          data: []
+        };
+      }
     });
     
-    console.log(`Found ${allDates.size} unique adjusted dates`);
+    console.log(`Found ${allDates.size} unique dates`);
     
     // Create basket data by combining all commodities
     const sortedDates = Array.from(allDates).sort();
@@ -186,12 +184,24 @@ async function processPrices() {
           processedData.alignedPrices.push({
             commodity,
             date: '2024 Avg',
-            adjDate: '2024 Avg',
             price: baseline,
             minPrice: baseline,
             maxPrice: baseline,
             isAggregated: false,
             priceCount: 1
+          });
+          
+          // Add to chart data
+          if (!processedData.charts[commodity]) {
+            processedData.charts[commodity] = { data: [] };
+          }
+          
+          processedData.charts[commodity].data.push({
+            date: '2024 Avg',
+            price: baseline,
+            minPrice: baseline,
+            maxPrice: baseline,
+            formattedDate: '2024 Avg'
           });
         }
       });
@@ -202,7 +212,6 @@ async function processPrices() {
       if (baselineBasketPrice !== null) {
         processedData.basket.push({
           date: '2024 Avg',
-          adjDate: '2024 Avg',
           basketPrice: baselineBasketPrice,
           prices: baselinePrices,
           formattedDate: '2024 Avg',
@@ -211,46 +220,102 @@ async function processPrices() {
       }
     }
     
-    // Process regular data points
-    sortedDates.forEach(adjDate => {
-      if (adjDate === '2024 Avg') return; // Skip baseline, already handled
+    // Get the latest price for each commodity
+    const getLatestPriceForCommodity = (commodity) => {
+      const alignedPrices = processedData.alignedPrices
+        .filter(p => p.commodity === commodity && p.date !== '2024 Avg')
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
       
-      // Get prices for all commodities on this date
+      return alignedPrices.length > 0 ? alignedPrices[0].price : null;
+    };
+    
+    // Process regular data points for each actual date (no adjustment)
+    sortedDates.forEach(date => {
+      if (date === '2024 Avg') return; // Skip baseline, already handled
+      
+      // Get all prices for this date across commodities
       const dateData = {};
       Object.keys(rawData).forEach(commodity => {
         const aligned = processedData.alignedPrices.find(p => 
-          p.commodity === commodity && p.adjDate === adjDate
+          p.commodity === commodity && p.date === date
         );
         dateData[commodity] = aligned ? aligned.price : null;
       });
       
-      // Calculate basket price
+      // Fill in missing prices with the latest available price
+      const dateWithLatestPrices = { ...dateData };
+      let usedLatestPrices = false;
+      
+      Object.keys(quantities).forEach(commodity => {
+        if (dateWithLatestPrices[commodity] === null) {
+          dateWithLatestPrices[commodity] = getLatestPriceForCommodity(commodity);
+          if (dateWithLatestPrices[commodity] !== null) {
+            usedLatestPrices = true;
+          }
+        }
+      });
+      
+      // Add to chart data for each commodity
+      Object.keys(rawData).forEach(commodity => {
+        const price = processedData.alignedPrices.find(p => 
+          p.commodity === commodity && p.date === date
+        );
+        
+        if (price) {
+          if (!processedData.charts[commodity]) {
+            processedData.charts[commodity] = { data: [] };
+          }
+          
+          processedData.charts[commodity].data.push({
+            date: price.date,
+            price: price.price,
+            minPrice: price.minPrice,
+            maxPrice: price.maxPrice,
+            formattedDate: formatDate(price.date)
+          });
+        }
+      });
+      
+      // Calculate basket price using actual prices for the date
       const basketPrice = calculateBasketPrice(dateData, quantities);
+      
+      // Also calculate basket with latest prices filled in for missing values
+      const basketWithLatestPrices = calculateBasketPrice(dateWithLatestPrices, quantities);
       
       if (basketPrice !== null) {
         processedData.basket.push({
-          date: adjDate, // Use adjusted date as the main date
-          adjDate,
+          date,
           basketPrice,
-          prices: { ...dateData }, // Copy of all commodity prices
-          formattedDate: formatDate(adjDate),
+          prices: { ...dateData },
+          formattedDate: formatDate(date),
           isComplete: Object.keys(quantities).every(c => dateData[c] !== null)
+        });
+      } else if (basketWithLatestPrices !== null && usedLatestPrices) {
+        // If we couldn't calculate a basket with just this date's prices,
+        // but could with the latest available prices, add that instead
+        processedData.basket.push({
+          date,
+          basketPrice: basketWithLatestPrices,
+          prices: { ...dateWithLatestPrices },
+          formattedDate: formatDate(date),
+          isComplete: false,
+          usedLatestPrices: true
         });
       }
     });
     
     // Sort basket data by date
     processedData.basket.sort((a, b) => {
-      if (a.adjDate === '2024 Avg') return -1;
-      if (b.adjDate === '2024 Avg') return 1;
-      return new Date(a.adjDate) - new Date(b.adjDate);
+      if (a.date === '2024 Avg') return -1;
+      if (b.date === '2024 Avg') return 1;
+      return new Date(a.date) - new Date(b.date);
     });
     
     // Add a calculation of period-over-period changes
     processedData.basket.forEach((item, index) => {
-      if (index > 0 && item.adjDate !== '2024 Avg') {
+      if (index > 0 && item.date !== '2024 Avg') {
         const prev = processedData.basket[index - 1];
-        if (prev.adjDate !== '2024 Avg') {
+        if (prev.date !== '2024 Avg') {
           item.change = {
             amount: item.basketPrice - prev.basketPrice,
             percent: ((item.basketPrice - prev.basketPrice) / prev.basketPrice) * 100
@@ -261,42 +326,35 @@ async function processPrices() {
     
     // Sort aligned prices by date, then commodity
     processedData.alignedPrices.sort((a, b) => {
-      if (a.adjDate === '2024 Avg') return -1;
-      if (b.adjDate === '2024 Avg') return 1;
+      if (a.date === '2024 Avg') return -1;
+      if (b.date === '2024 Avg') return 1;
       
-      const dateCompare = new Date(a.adjDate) - new Date(b.adjDate);
+      const dateCompare = new Date(a.date) - new Date(b.date);
       if (dateCompare !== 0) return dateCompare;
       
       return a.commodity.localeCompare(b.commodity);
     });
     
-    // Ensure proper commodity names are used in the charts:
+    // Process each commodity's chart data
     Object.keys(rawData).forEach(commodity => {
-      // Convert commodity keys to lowercase for consistency
-      const commodityId = commodity.toLowerCase();
+      // Skip if no chart data initialized
+      if (!processedData.charts[commodity]) return;
       
       // Get display name from metadata if available
-      const displayName = rawData[commodity]?.metadata?.name || commodityId;
+      const displayName = rawData[commodity]?.metadata?.name || commodity;
       
-      // Initialize the chart data for this commodity
-      processedData.charts[commodityId] = {
-        data: processedData.alignedPrices
-          .filter(p => p.commodity === commodityId)
-          .map(p => ({
-            date: p.date,
-            adjDate: p.adjDate,
-            price: p.price,
-            minPrice: p.minPrice,
-            maxPrice: p.maxPrice,
-            formattedDate: formatDate(p.adjDate)
-          }))
-      };
+      // Sort the data by date
+      processedData.charts[commodity].data.sort((a, b) => {
+        if (a.date === '2024 Avg') return -1;
+        if (b.date === '2024 Avg') return 1;
+        return new Date(a.date) - new Date(b.date);
+      });
       
       // Calculate change percentages
-      processedData.charts[commodityId].data.forEach((item, index) => {
-        if (index > 0 && item.adjDate !== '2024 Avg') {
-          const prev = processedData.charts[commodityId].data[index - 1];
-          if (prev.adjDate !== '2024 Avg') {
+      processedData.charts[commodity].data.forEach((item, index) => {
+        if (index > 0 && item.date !== '2024 Avg') {
+          const prev = processedData.charts[commodity].data[index - 1];
+          if (prev.date !== '2024 Avg') {
             item.change = {
               amount: item.price - prev.price,
               percent: ((item.price - prev.price) / prev.price) * 100
@@ -306,13 +364,19 @@ async function processPrices() {
       });
       
       // Get latest price
-      const latestPoint = processedData.charts[commodityId].data[processedData.charts[commodityId].data.length - 1];
-      processedData.charts[commodityId].latest = latestPoint;
+      const nonBaselineData = processedData.charts[commodity].data.filter(d => d.date !== '2024 Avg');
+      const latestPoint = nonBaselineData.length > 0 
+        ? nonBaselineData[nonBaselineData.length - 1] 
+        : null;
+      
+      if (latestPoint) {
+        processedData.charts[commodity].latest = latestPoint;
+      }
       
       // Get comparison to 2024 average
-      const baselinePoint = processedData.charts[commodityId].data.find(p => p.adjDate === '2024 Avg');
+      const baselinePoint = processedData.charts[commodity].data.find(p => p.date === '2024 Avg');
       if (baselinePoint && latestPoint) {
-        processedData.charts[commodityId].vsBaseline = {
+        processedData.charts[commodity].vsBaseline = {
           amount: latestPoint.price - baselinePoint.price,
           percent: ((latestPoint.price - baselinePoint.price) / baselinePoint.price) * 100
         };
@@ -321,20 +385,26 @@ async function processPrices() {
     
     // Add latest values for basket
     if (processedData.basket.length > 0) {
-      processedData.metadata.latest = {
-        basketPrice: processedData.basket[processedData.basket.length - 1].basketPrice,
-        date: processedData.basket[processedData.basket.length - 1].adjDate
-      };
+      const nonBaselineBasket = processedData.basket.filter(b => b.date !== '2024 Avg');
+      const latestBasket = nonBaselineBasket.length > 0 
+        ? nonBaselineBasket[nonBaselineBasket.length - 1] 
+        : null;
       
-      // Compare to 2024 average
-      const baselineBasket = processedData.basket.find(b => b.adjDate === '2024 Avg');
-      const latestBasket = processedData.basket[processedData.basket.length - 1];
-      
-      if (baselineBasket && latestBasket) {
-        processedData.metadata.latest.vsBaseline = {
-          amount: latestBasket.basketPrice - baselineBasket.basketPrice,
-          percent: ((latestBasket.basketPrice - baselineBasket.basketPrice) / baselineBasket.basketPrice) * 100
+      if (latestBasket) {
+        processedData.metadata.latest = {
+          basketPrice: latestBasket.basketPrice,
+          date: latestBasket.date
         };
+        
+        // Compare to 2024 average
+        const baselineBasket = processedData.basket.find(b => b.date === '2024 Avg');
+        
+        if (baselineBasket) {
+          processedData.metadata.latest.vsBaseline = {
+            amount: latestBasket.basketPrice - baselineBasket.basketPrice,
+            percent: ((latestBasket.basketPrice - baselineBasket.basketPrice) / baselineBasket.basketPrice) * 100
+          };
+        }
       }
     }
     

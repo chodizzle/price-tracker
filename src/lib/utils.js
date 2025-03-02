@@ -6,62 +6,58 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
-// Friday Friday:
 /**
- * Gets the nearest Friday for a date, preferring the current Friday if it is one,
- * otherwise using the previous Friday. Never crosses year boundaries.
+ * Format a date for display
  * @param {string} dateStr - Date in YYYY-MM-DD format
- * @returns {string} Nearest Friday in YYYY-MM-DD format
+ * @returns {string} Formatted date
  */
-function getNearestFriday(dateStr) {
-  // Special case for 2024 Avg
+function formatDate(dateStr) {
   if (dateStr === '2024 Avg') return dateStr;
   
-  // Parse the date, using noon UTC to avoid timezone issues
-  const date = new Date(dateStr + 'T12:00:00Z');
-  const originalYear = date.getUTCFullYear();
-  
-  // If already a Friday, return as is
-  if (date.getUTCDay() === 5) {
-    return dateStr;
-  }
-  
-  // Calculate days to go back to previous Friday
-  let daysToSubtract = date.getUTCDay();
-  if (daysToSubtract < 5) {
-    // For days 0-4 (Sun-Thu), go back by day + 2 (except Sunday)
-    daysToSubtract = daysToSubtract === 0 ? 2 : daysToSubtract + 2;
-  } else {
-    // For day 6 (Saturday), go back 1 day
-    daysToSubtract = 1;
-  }
-  
-  // Create a new date by subtracting days
-  const adjustedDate = new Date(date);
-  adjustedDate.setUTCDate(date.getUTCDate() - daysToSubtract);
-  
-  // Check if we've crossed a year boundary
-  if (adjustedDate.getUTCFullYear() !== originalYear) {
-    // If crossing year boundary, use the original date
-    return dateStr;
-  }
-  
-  // Format as YYYY-MM-DD
-  return adjustedDate.toISOString().split('T')[0];
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric',
+    year: 'numeric'
+  });
 }
 
 /**
- * Determines if a date string is a Friday
- * @param {string} dateStr - Date in YYYY-MM-DD format
- * @returns {boolean} True if the date is a Friday
+ * Checks if two dates are in the same month and year
+ * @param {string} date1 - First date in YYYY-MM-DD format
+ * @param {string} date2 - Second date in YYYY-MM-DD format
+ * @returns {boolean} True if dates are in the same month and year
  */
-function isFriday(dateStr) {
-  const date = new Date(dateStr + 'T12:00:00Z'); // Use noon UTC to avoid timezone issues
-  return date.getUTCDay() === 5; // 5 = Friday in UTC
+function isSameMonth(date1, date2) {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+}
+
+/**
+ * Get the month name for a date
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {string} Month name
+ */
+function getMonthName(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'long' });
+}
+
+/**
+ * Get the year for a date
+ * @param {string} dateStr - Date in YYYY-MM-DD format
+ * @returns {number} Year
+ */
+function getYear(dateStr) {
+  const date = new Date(dateStr);
+  return date.getFullYear();
 }
 
 module.exports = {
-  cn, // existing function
-  getNearestFriday,
-  isFriday
+  cn,
+  formatDate,
+  isSameMonth,
+  getMonthName,
+  getYear
 };

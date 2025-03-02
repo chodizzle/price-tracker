@@ -1,32 +1,5 @@
 // src/lib/priceDataManager.js
 const storage = require('./storage');
-const { getNearestFriday, isFriday } = require('../lib/utils');
-
-/**
- * Adds adjusted date field to price data
- * @param {Array} prices - Array of price objects
- * @returns {Array} Updated price objects with adj_date field
- */
-function addAdjustedDates(prices) {
-  return prices.map(price => {
-    // Skip if already has adj_date
-    if (price.adj_date) return price;
-    
-    // For special cases like "2024 Avg", keep as is
-    if (price.date === '2024 Avg') {
-      return {
-        ...price,
-        adj_date: price.date
-      };
-    }
-    
-    // For regular dates, calculate the nearest Friday
-    return {
-      ...price,
-      adj_date: getNearestFriday(price.date)
-    };
-  });
-}
 
 class PriceDataManager {
   constructor() {
@@ -37,31 +10,6 @@ class PriceDataManager {
     this.cache = await this.loadCache();
     this.data = await this.loadData();
     await this.initializeDataStructure();
-    
-    // Add adjusted dates to existing data
-    await this.addAdjustedDatesToExistingData();
-  }
-
-  // Add adjusted dates to all existing price data
-  async addAdjustedDatesToExistingData() {
-    let dataChanged = false;
-    
-    for (const commodity of Object.keys(this.data)) {
-      if (!this.data[commodity]?.prices) continue;
-      
-      const updatedPrices = addAdjustedDates(this.data[commodity].prices);
-      
-      if (JSON.stringify(updatedPrices) !== JSON.stringify(this.data[commodity].prices)) {
-        this.data[commodity].prices = updatedPrices;
-        dataChanged = true;
-      }
-    }
-    
-    // Save if data was updated
-    if (dataChanged) {
-      await this.saveData();
-      console.log('Added adjusted dates to existing price data');
-    }
   }
 
   // Ensure proper data structure
@@ -149,7 +97,7 @@ class PriceDataManager {
     }
   }
 
-  // Updated addPriceData method with date alignment
+  // Updated addPriceData method without date alignment
   async addPriceData(commodity, newPrices) {
     console.log(`Adding ${newPrices.length} new prices for ${commodity}`);
     
@@ -171,19 +119,12 @@ class PriceDataManager {
     
     const existingDates = new Set(existingPrices.map(p => p.date));
     
-    // Add adjusted dates to new prices
+    // Add prices without adjustment
     const pricesToAdd = newPrices
       .filter(p => {
         const isDuplicate = existingDates.has(p.date);
         console.log(`Price for ${p.date}: ${isDuplicate ? 'DUPLICATE' : 'NEW'}`);
         return !isDuplicate;
-      })
-      .map(p => {
-        // Add adjusted date field
-        return {
-          ...p,
-          adj_date: getNearestFriday(p.date)
-        };
       });
     
     if (pricesToAdd.length > 0) {
@@ -222,20 +163,6 @@ async function getPriceDataManager() {
   return await priceDataManagerPromise;
 }
 
-// The updatePrices function needs to be adapted to async/await
-async function updatePrices(commodity, jsonFilePath) {
-  try {
-    // ... existing implementation ...
-    // Replace direct priceDataManager usage with:
-    const priceDataManager = await getPriceDataManager();
-    // ... then call the async methods ...
-  } catch (error) {
-    // ... error handling ...
-  }
-}
-
 module.exports = {
-  addAdjustedDates,
-  getPriceDataManager,
-  updatePrices
+  getPriceDataManager
 };
