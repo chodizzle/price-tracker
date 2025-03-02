@@ -4,6 +4,7 @@ import storage from '@/lib/storage';
 
 // Enhanced version for more reliable initialization
 export async function POST(request) {
+  console.log('Update prices endpoint called');
   try {
     // Check authorization
     const authHeader = request.headers.get('authorization');
@@ -53,16 +54,38 @@ export async function POST(request) {
     try {
       console.log('Importing initialization modules...');
       
-      // Import initialization functions (must use ESM dynamic import syntax)
-      const initEggPricesModule = await import('@/scripts/init-egg-prices');
-      const initMilkPricesModule = await import('@/scripts/init-milk-prices');
-      const initGasolinePricesModule = await import('@/scripts/init-gasoline-prices');
-      const processPricesModule = await import('@/scripts/process-prices');
+      // Import in a more explicit and careful way
+      const scriptsBasePath = process.cwd() + '/src/scripts';
+      console.log('Scripts base path:', scriptsBasePath);
       
-      const { initializeEggPrices } = initEggPricesModule;
-      const { initializeMilkPrices } = initMilkPricesModule;
-      const { initializeGasolinePrices } = initGasolinePricesModule;
-      const { processPrices } = processPricesModule;
+      // Import and extract functions one by one with better error handling
+      console.log('Importing egg prices module...');
+      const { initializeEggPrices } = await import('@/scripts/init-egg-prices.js')
+        .catch(err => {
+          console.error('Error importing egg prices module:', err);
+          throw new Error(`Failed to import egg prices module: ${err.message}`);
+        });
+        
+      console.log('Importing milk prices module...');
+      const { initializeMilkPrices } = await import('@/scripts/init-milk-prices.js')
+        .catch(err => {
+          console.error('Error importing milk prices module:', err);
+          throw new Error(`Failed to import milk prices module: ${err.message}`);
+        });
+        
+      console.log('Importing gasoline prices module...');  
+      const { initializeGasolinePrices } = await import('@/scripts/init-gasoline-prices.js')
+        .catch(err => {
+          console.error('Error importing gasoline prices module:', err);
+          throw new Error(`Failed to import gasoline prices module: ${err.message}`);
+        });
+        
+      console.log('Importing process prices module...');
+      const { processPrices } = await import('@/scripts/process-prices.js')
+        .catch(err => {
+          console.error('Error importing process prices module:', err);
+          throw new Error(`Failed to import process prices module: ${err.message}`);
+        });
       
       // Initialize data
       console.log('Initializing egg prices...');
@@ -103,11 +126,20 @@ export async function POST(request) {
       }, { status: 500 });
     }
   } catch (error) {
-    console.error('Unhandled error:', error);
+    console.error('Unhandled error in update prices:', error);
+    
+    // Handle circular references in error objects
+    const safeError = {
+      message: error.message || 'Unknown error',
+      name: error.name,
+      stack: error.stack
+    };
+    
     return NextResponse.json({
       success: false,
       message: 'Failed to update price data',
-      error: error.message
+      error: safeError.message,
+      errorDetails: safeError
     }, { status: 500 });
   }
 }

@@ -12,6 +12,7 @@ export default function AdminPage() {
   const [kvTestResult, setKvTestResult] = useState(null);
   const [directKvTestResult, setDirectKvTestResult] = useState(null);
   const [migrateResult, setMigrateResult] = useState(null);
+  const [directInitResult, setDirectInitResult] = useState(null);
   
   // Fetch status on load
   useEffect(() => {
@@ -44,10 +45,10 @@ export default function AdminPage() {
       
       setKvTestResult(data);
       
-      if (data.kvTest.connected) {
+      if (data.kvTest?.connected) {
         setMessage('KV connection test successful! 🎉');
       } else {
-        setMessage(`KV connection test failed: ${data.kvTest.error}`);
+        setMessage(`KV connection test failed: ${data.kvTest?.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error testing KV connection:', error);
@@ -71,9 +72,9 @@ export default function AdminPage() {
       
       const successfulTests = data.tests?.filter(test => test.status === "success") || [];
       if (successfulTests.length > 0) {
-        setMessage(`Found a working KV connection method! 🎉 ${data.recommendation}`);
+        setMessage(`Found a working KV connection method! 🎉 ${data.recommendation || ''}`);
       } else {
-        setMessage(`All KV connection tests failed. ${data.recommendation}`);
+        setMessage(`All KV connection tests failed. ${data.recommendation || ''}`);
       }
     } catch (error) {
       console.error('Error running advanced KV diagnostic:', error);
@@ -112,12 +113,56 @@ export default function AdminPage() {
         // Refresh status to show the data is now present
         await fetchStatus();
       } else {
-        setMessage(`Database migration failed: ${data.error}`);
+        setMessage(`Database migration failed: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error migrating database:', error);
       setMessage(`Error: ${error.message}`);
       setMigrateResult({ error: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Direct initialization with static data
+  const directInitialize = async () => {
+    if (!secretKey) {
+      setMessage('Please enter the admin secret key');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setMessage('Directly initializing database with static data...');
+      
+      const response = await fetch('/api/admin/direct-init', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${secretKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        throw new Error(`Failed to parse response: ${e.message}. Status: ${response.status}`);
+      }
+      
+      setDirectInitResult(data);
+      
+      if (data.success) {
+        setMessage('Database successfully initialized with static data! The app should now work with baseline data.');
+        // Refresh status to show the data is now present
+        await fetchStatus();
+      } else {
+        setMessage(`Direct initialization failed: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error in direct initialization:', error);
+      setMessage(`Error: ${error.message}`);
+      setDirectInitResult({ error: error.message });
     } finally {
       setLoading(false);
     }
@@ -141,15 +186,15 @@ export default function AdminPage() {
         }
       });
       
-      const result = await response.json();
-      setResult(result);
+      const data = await response.json();
+      setResult(data);
       
-      if (result.success) {
+      if (data.success) {
         setMessage('Data initialization successful!');
         // Refresh status after initialization
         await fetchStatus();
       } else {
-        setMessage(`Initialization failed: ${result.error}`);
+        setMessage(`Initialization failed: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Error initializing data:', error);
@@ -200,38 +245,38 @@ export default function AdminPage() {
               <div className="text-sm">
                 <div className="mb-3">
                   <span className="font-semibold">Redis Status:</span>
-                  <span className={`ml-2 ${status.redis.status === 'connected' ? 'text-green-600' : 'text-red-600'}`}>
-                    {status.redis.status}
+                  <span className={`ml-2 ${status.redis?.status === 'connected' ? 'text-green-600' : 'text-red-600'}`}>
+                    {status.redis?.status || 'unknown'}
                   </span>
                 </div>
                 
                 <div className="mb-3">
                   <span className="font-semibold">Data Status:</span>
                   <ul className="ml-4 list-disc">
-                    <li>price_data: {status.data.hasPriceData ? '✅' : '❌'}</li>
-                    <li>combined_price_data: {status.data.hasCombinedData ? '✅' : '❌'}</li>
+                    <li>price_data: {status.data?.hasPriceData ? '✅' : '❌'}</li>
+                    <li>combined_price_data: {status.data?.hasCombinedData ? '✅' : '❌'}</li>
                   </ul>
                 </div>
                 
                 <div className="mb-3">
                   <span className="font-semibold">Environment:</span>
                   <ul className="ml-4 list-disc">
-                    <li>KV_URL configured: {status.environment.kv_url_configured ? '✅' : '❌'}</li>
-                    <li>KV_REST_API configured: {status.environment.kv_rest_api_configured ? '✅' : '❌'}</li>
-                    <li>USDA_API_KEY configured: {status.environment.usda_api_key_configured ? '✅' : '❌'}</li>
-                    <li>EIA_API_KEY configured: {status.environment.eia_api_key_configured ? '✅' : '❌'}</li>
-                    <li>CRON_SECRET configured: {status.environment.cron_secret_configured ? '✅' : '❌'}</li>
-                    <li>ADMIN_SECRET_KEY configured: {status.environment.admin_secret_key_configured ? '✅' : '❌'}</li>
+                    <li>KV_URL configured: {status.environment?.kv_url_configured ? '✅' : '❌'}</li>
+                    <li>KV_REST_API configured: {status.environment?.kv_rest_api_configured ? '✅' : '❌'}</li>
+                    <li>USDA_API_KEY configured: {status.environment?.usda_api_key_configured ? '✅' : '❌'}</li>
+                    <li>EIA_API_KEY configured: {status.environment?.eia_api_key_configured ? '✅' : '❌'}</li>
+                    <li>CRON_SECRET configured: {status.environment?.cron_secret_configured ? '✅' : '❌'}</li>
+                    <li>ADMIN_SECRET_KEY configured: {status.environment?.admin_secret_key_configured ? '✅' : '❌'}</li>
                   </ul>
                 </div>
                 
                 <div className="mb-3">
                   <span className="font-semibold">KV Connection Details:</span>
                   <ul className="ml-4 list-disc">
-                    <li>Status: {status.redis.status}</li>
-                    <li>Initialized: {status.redis.connectionDetails?.initialized ? '✅' : '❌'}</li>
-                    <li>Connected: {status.redis.connectionDetails?.connected ? '✅' : '❌'}</li>
-                    {status.redis.connectionDetails?.lastError && (
+                    <li>Status: {status.redis?.status || 'unknown'}</li>
+                    <li>Initialized: {status.redis?.connectionDetails?.initialized ? '✅' : '❌'}</li>
+                    <li>Connected: {status.redis?.connectionDetails?.connected ? '✅' : '❌'}</li>
+                    {status.redis?.connectionDetails?.lastError && (
                       <li className="text-red-600">
                         Last Error: {status.redis.connectionDetails.lastError.message}
                         <br/>
@@ -241,7 +286,7 @@ export default function AdminPage() {
                   </ul>
                 </div>
                 
-                {status.redis.keyList && status.redis.keyList.length > 0 && (
+                {status.redis?.keyList && status.redis.keyList.length > 0 && (
                   <div className="mb-3">
                     <span className="font-semibold">Redis Keys:</span>
                     <ul className="ml-4 list-disc">
@@ -275,35 +320,55 @@ export default function AdminPage() {
             
             <div className="flex flex-col gap-2">
               <button
-                onClick={migrateDatabase}
+                onClick={directInitialize}
                 disabled={loading}
-                className="w-full bg-purple-600 text-white py-2 rounded-md font-medium hover:bg-purple-700 disabled:bg-gray-400"
-                title="Set up initial database structure without loading price data"
+                className="w-full bg-green-600 text-white py-2 rounded-md font-medium hover:bg-green-700 disabled:bg-gray-400"
+                title="Initialize database with static baseline data - fastest and most reliable"
               >
-                {loading ? 'Processing...' : 'Initialize Database Structure'}
+                {loading ? 'Processing...' : 'Initialize with Static Data (Recommended)'}
               </button>
-            
-              <button
-                onClick={initializeData}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400"
-                title="Fetch price data from USDA and EIA APIs"
-              >
-                {loading ? 'Processing...' : 'Initialize Price Data'}
-              </button>
+              
+              <div className="flex flex-col gap-2 p-2 border border-gray-200 rounded mt-4">
+                <h4 className="text-sm font-medium text-center mb-1">Advanced Options</h4>
+                <button
+                  onClick={migrateDatabase}
+                  disabled={loading}
+                  className="w-full bg-purple-600 text-white py-2 rounded-md font-medium hover:bg-purple-700 disabled:bg-gray-400 text-sm"
+                  title="Set up empty database structure without loading price data"
+                >
+                  {loading ? 'Processing...' : 'Initialize Empty Database Structure'}
+                </button>
+              
+                <button
+                  onClick={initializeData}
+                  disabled={loading}
+                  className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 disabled:bg-gray-400 text-sm"
+                  title="Fetch price data from USDA and EIA APIs (may be slow)"
+                >
+                  {loading ? 'Processing...' : 'Initialize with Live API Data'}
+                </button>
+              </div>
             </div>
             
             {message && (
-              <div className={`mt-4 p-3 rounded ${result?.success ? 'bg-green-100' : 'bg-red-100'}`}>
+              <div className={`mt-4 p-3 rounded ${result?.success || directInitResult?.success || migrateResult?.success ? 'bg-green-100' : 'bg-red-100'}`}>
                 {message}
               </div>
             )}
             
-            {result && (
+            {directInitResult && (
               <div className="mt-4 border rounded p-3 bg-gray-50">
-                <pre className="text-xs overflow-auto whitespace-pre-wrap">
-                  {JSON.stringify(result, null, 2)}
-                </pre>
+                <h4 className="font-medium mb-2">Static Data Initialization Result:</h4>
+                <div className={`mb-3 p-2 ${directInitResult.success ? 'bg-green-50' : 'bg-red-50'} rounded`}>
+                  <p className={directInitResult.success ? 'text-green-600' : 'text-red-600'}>
+                    {directInitResult.success ? 'Success! Database initialized with static data.' : 'Direct initialization failed.'}
+                  </p>
+                  {directInitResult.message && <p className="text-sm mt-1">{directInitResult.message}</p>}
+                  {directInitResult.error && <p className="text-sm text-red-600 mt-1">{directInitResult.error}</p>}
+                </div>
+                <div className="text-xs overflow-auto whitespace-pre-wrap">
+                  <pre>{JSON.stringify(directInitResult, null, 2)}</pre>
+                </div>
               </div>
             )}
             
@@ -319,6 +384,22 @@ export default function AdminPage() {
                 </div>
                 <div className="text-xs overflow-auto whitespace-pre-wrap">
                   <pre>{JSON.stringify(migrateResult, null, 2)}</pre>
+                </div>
+              </div>
+            )}
+            
+            {result && (
+              <div className="mt-4 border rounded p-3 bg-gray-50">
+                <h4 className="font-medium mb-2">API Data Initialization Result:</h4>
+                <div className={`mb-3 p-2 ${result.success ? 'bg-green-50' : 'bg-red-50'} rounded`}>
+                  <p className={result.success ? 'text-green-600' : 'text-red-600'}>
+                    {result.success ? 'Success! API data initialized.' : 'API data initialization failed.'}
+                  </p>
+                  {result.message && <p className="text-sm mt-1">{result.message}</p>}
+                  {result.error && <p className="text-sm text-red-600 mt-1">{result.error}</p>}
+                </div>
+                <div className="text-xs overflow-auto whitespace-pre-wrap">
+                  <pre>{JSON.stringify(result, null, 2)}</pre>
                 </div>
               </div>
             )}

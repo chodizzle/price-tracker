@@ -7,6 +7,7 @@ import { createClient } from '@vercel/kv';
  * Useful when troubleshooting connection issues
  */
 export async function POST(request) {
+  console.log('Migration endpoint called');
   try {
     // Require a secret key for security
     const authHeader = request.headers.get('authorization');
@@ -216,9 +217,12 @@ export async function POST(request) {
       }, { status: 500 });
     }
   } catch (error) {
+    console.error('Migration endpoint error:', error);
+    // Ensure we return a valid JSON response
     return NextResponse.json({
       success: false,
-      error: error.message,
+      error: error.message || 'Unknown error in migration endpoint',
+      errorType: error.constructor.name,
       stack: error.stack
     }, { status: 500 });
   }
